@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: Bulk Date Update
- * Version: 1.4.2
+ * Version: 1.4.3
  * Description: Change the Post Update date for all posts in one click. This will help your blog in search engines and your blog will look alive. Do this every week or month.
  * Author: wplove.co
  * Author URI: https://tomrobak.com
@@ -29,7 +29,7 @@
 */
 
 // Define plugin version constant
-define('BULK_DATE_UPDATE_VERSION', '1.4.2');
+define('BULK_DATE_UPDATE_VERSION', '1.4.3');
 
 /**
  * Add plugin menu item to WordPress admin

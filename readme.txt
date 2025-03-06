@@ -5,7 +5,7 @@ Donate link: https://wplove.co
 Requires at least: 6.7
 Tested up to: 6.7.2
 Requires PHP: 8.0
-Stable tag: 1.4.2
+Stable tag: 1.4.3
 License: GPL2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -90,13 +90,15 @@ Yes, the plugin updates WordPress core date fields that are independent of page 
 
 == Changelog ==
 
+= 1.4.3 =
+* Fixed issue where tabs wouldn't appear immediately after enabling them
+* Improved real-time tab visibility updates for better user experience
+* Added auto page reload when necessary for newly added tabs
+* Converted documentation to Markdown format for better GitHub compatibility
+* Enhanced tab toggling logic for more immediate visual feedback
+
 = 1.4.2 =
 * Fixed critical issue with tab toggles not working in the Settings tab
-* Improved event handling for checkboxes to ensure proper functionality 
-* Enhanced real-time UI feedback when enabling or disabling tabs
-* Added proper class to all tab toggle controls for consistent behavior
-* Improved error handling and messaging for better user experience
-* Implemented fallback nonce retrieval for more robust security
 
 = 1.4.1 =
 * Fixed JavaScript error "setupToggleTabs is not a function" that was breaking tab functionality

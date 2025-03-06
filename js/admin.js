@@ -4,7 +4,7 @@
  * Handles all the admin interactions including modern date/time pickers
  * and performance optimizations.
  * 
- * @since 1.4.2
+ * @since 1.4.3
  */
 
 (function($) {
@@ -313,8 +313,18 @@
                             
                             // Update tab visibility in real-time if available in DOM
                             if (isChecked) {
-                                $('#bulk-date-tabs a[data-tab="' + tabId + '"]').removeClass('hidden');
+                                // If the tab is enabled, make it visible immediately
+                                const $tab = $('#bulk-date-tabs a[data-tab="' + tabId + '"]');
+                                if ($tab.length) {
+                                    // If tab exists but is hidden, show it
+                                    $tab.removeClass('hidden');
+                                } else {
+                                    // If tab doesn't exist in DOM yet, reload the page
+                                    // This is necessary for newly added tabs to appear
+                                    window.location.reload();
+                                }
                             } else {
+                                // If the tab is disabled, hide it immediately
                                 $('#bulk-date-tabs a[data-tab="' + tabId + '"]').addClass('hidden');
                             }
                         } else {
