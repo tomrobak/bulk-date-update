@@ -4,7 +4,7 @@
  * Handles all the admin interactions including modern date/time pickers
  * and performance optimizations.
  * 
- * @since 1.4.1
+ * @since 1.4.2
  */
 
 (function($) {
@@ -274,14 +274,28 @@
                 // For other tabs, let the default navigation happen
             });
             
+            // MAJOR FIX: Ensure the tab toggle checkboxes have their change event properly bound
+            console.log('Setting up tab toggles. Found ' + $('.bulkud-tab-toggle').length + ' toggle checkboxes.');
+            
             // Handle checkbox changes for tab toggling via AJAX
-            $('.bulkud-tab-toggle').on('change', function() {
+            $(document).on('change', '.bulkud-tab-toggle', function() {
                 const checkbox = $(this);
                 const tabId = checkbox.data('tab');
                 const isChecked = checkbox.is(':checked');
-                const tabToggleNonce = $('#settings-form-nonce input[name="tab_toggle_nonce"]').val();
+                
+                // First, get the nonce from the hidden field
+                let tabToggleNonce = '';
+                if ($('#settings-form-nonce input[name="tab_toggle_nonce"]').length > 0) {
+                    tabToggleNonce = $('#settings-form-nonce input[name="tab_toggle_nonce"]').val();
+                } else {
+                    // As a fallback, use the one provided in the global object
+                    tabToggleNonce = bulkDateUpdate.nonce;
+                }
                 
                 console.log('Sending AJAX request to toggle tab. TabID: ' + tabId + ', Enabled: ' + isChecked + ', Nonce: ' + tabToggleNonce);
+                
+                // Show loading feedback
+                BulkDateAdmin.showNotice(bulkDateUpdate.strings.updatingSettings, 'info');
                 
                 $.ajax({
                     url: bulkDateUpdate.ajaxUrl,
@@ -296,8 +310,15 @@
                         console.log('AJAX response:', response);
                         if (response.success) {
                             BulkDateAdmin.showNotice(response.data.message, 'success');
+                            
+                            // Update tab visibility in real-time if available in DOM
+                            if (isChecked) {
+                                $('#bulk-date-tabs a[data-tab="' + tabId + '"]').removeClass('hidden');
+                            } else {
+                                $('#bulk-date-tabs a[data-tab="' + tabId + '"]').addClass('hidden');
+                            }
                         } else {
-                            BulkDateAdmin.showNotice(response.data.message, 'error');
+                            BulkDateAdmin.showNotice(response.data.message || bulkDateUpdate.strings.errorUpdatingSettings, 'error');
                             // Revert checkbox to previous state
                             checkbox.prop('checked', !isChecked);
                         }
@@ -367,15 +388,18 @@
             const $notice = $('#settings-response');
             
             // Remove existing classes and add appropriate ones
-            $notice.removeClass('hidden notice-success notice-error')
+            $notice.removeClass('hidden notice-success notice-error notice-info')
                 .addClass('notice notice-' + type)
                 .html('<p>' + message + '</p>')
                 .show();
             
-            // Hide message after 3 seconds
-            setTimeout(function() {
-                $notice.fadeOut();
-            }, 3000);
+            // Only auto-hide success and info messages
+            if (type === 'success' || type === 'info') {
+                // Hide message after 3 seconds
+                setTimeout(function() {
+                    $notice.fadeOut();
+                }, 3000);
+            }
         }
     };
 

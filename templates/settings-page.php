@@ -136,7 +136,7 @@ $post_types = get_post_types($post_type_args, 'objects', 'and');
                         <?php _e('Pages', 'bulk-post-update-date'); ?>
                     </label><br>
                     <label>
-                        <input type="checkbox" name="tab_comments" id="tab_comments" value="1" <?php checked(isset($enabled_tabs['comments']) && $enabled_tabs['comments']); ?>>
+                        <input type="checkbox" name="tab_comments" id="tab_comments" value="1" <?php checked(isset($enabled_tabs['comments']) && $enabled_tabs['comments']); ?> class="bulkud-tab-toggle" data-tab="comments">
                         <?php _e('Comments', 'bulk-post-update-date'); ?>
                     </label>
                 </td>
@@ -150,7 +150,8 @@ $post_types = get_post_types($post_type_args, 'objects', 'and');
                         <input type="checkbox" name="tab_<?php echo esc_attr($post_type->name); ?>" 
                                id="tab_<?php echo esc_attr($post_type->name); ?>" 
                                value="1" 
-                               <?php checked(isset($enabled_tabs[$post_type->name]) && $enabled_tabs[$post_type->name]); ?>>
+                               <?php checked(isset($enabled_tabs[$post_type->name]) && $enabled_tabs[$post_type->name]); ?>
+                               class="bulkud-tab-toggle" data-tab="<?php echo esc_attr($post_type->name); ?>">
                         <?php echo esc_html($post_type->label); ?>
                     </label><br>
                     <?php endforeach; ?>
