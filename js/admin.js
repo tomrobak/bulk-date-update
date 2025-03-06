@@ -4,7 +4,7 @@
  * Handles all the admin interactions including modern date/time pickers
  * and performance optimizations.
  * 
- * @since 1.4.7
+ * @since 1.4.8
  */
 
 (function($) {

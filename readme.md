@@ -87,6 +87,14 @@ Yes, the plugin updates WordPress core date fields that are independent of page 
 
 ## Changelog
 
+### 1.4.8
+- Fixed field spacing in date and time pickers for optimal layout
+- Adjusted flex values to prevent fields from being too far apart
+- Made date range container full width to match time range container
+- Improved consistency between date and time range interfaces
+- Added max-width to input wrappers to ensure proper alignment
+- Optimized layout calculations for better visual balance
+
 ### 1.4.7
 - Fixed critical date format errors that caused "Invalid date provided" errors
 - Improved date conversion handling with robust error prevention
