@@ -2,11 +2,6 @@
 
 > Change the post update date for all posts and pages in one click to improve SEO and keep your blog looking fresh and active.
 
-[![WordPress Plugin Version](https://img.shields.io/wordpress/plugin/v/bulk-post-update-date)](https://wordpress.org/plugins/bulk-post-update-date/)
-[![WordPress Plugin Rating](https://img.shields.io/wordpress/plugin/rating/bulk-post-update-date)](https://wordpress.org/plugins/bulk-post-update-date/reviews/)
-[![WordPress Required Version](https://img.shields.io/wordpress/plugin/wp-version/bulk-post-update-date)](https://wordpress.org/plugins/bulk-post-update-date/)
-[![WordPress Plugin Downloads](https://img.shields.io/wordpress/plugin/dt/bulk-post-update-date)](https://wordpress.org/plugins/bulk-post-update-date/)
-
 ## Description
 
 Bulk Date Update allows you to quickly update the dates of your WordPress content, including posts, pages, custom post types, and comments. This optimization helps search engines recognize your content as fresh and relevant, potentially improving your search rankings.
