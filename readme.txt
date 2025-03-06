@@ -2,10 +2,10 @@
 Contributors: wplove
 Tags: posts, update, date, bulk, seo, google, pages, modified date
 Donate link: https://wplove.co
-Requires at least: 5.0
+Requires at least: 6.7
 Tested up to: 6.7.2
 Requires PHP: 8.0
-Stable tag: 1.2
+Stable tag: 1.3
 License: GPL2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,12 +31,12 @@ Search engines like Google prioritize fresh content in their rankings. When your
 * Bulk update **Comments** dates for added realism
 * **Random distribution** of dates for natural appearance
 * Custom date range selection for precise control
-* NEW: **Custom time range** for even more precise control
+* **Modern time picker** with presets for easy time selection
 * Option to update published date, modified date, or both
 * Dedicated admin menu for quick access
-* Optimized performance for sites with thousands of posts
+* Optimized performance with tab content caching
 * Customizable admin interface with selectable tabs
-* Faster tab switching for better performance
+* Ultra-fast tab switching for better user experience
 * More date range options (3 days, 7 days)
 
 #### Support
@@ -65,7 +65,7 @@ No, this plugin only changes the date metadata of your posts, it doesn't modify 
 For optimal SEO benefits without appearing manipulative, we recommend updating post dates every 3-4 weeks, and ideally after making actual content improvements.
 
 = Can I choose specific times for my date updates? =
-Yes! In version 1.2, we've added a custom time range feature that lets you specify the time window for updates. When enabled, the plugin will generate random times within your specified range (e.g., between 9:00 AM and 5:00 PM) for a more realistic update pattern.
+Yes! Our modern time picker interface gives you precise control over time ranges, including common presets like Business Hours (9AM-5PM) or Evening hours. This helps create more natural and realistic update patterns.
 
 = Will search engines penalize me for using this? =
 When used responsibly (not daily), search engines typically won't penalize date updates. However, it's always recommended to follow this practice in moderation and in combination with actual content updates.
@@ -85,9 +85,26 @@ Yes, the plugin updates WordPress core date fields that are independent of page 
 3. Custom post type date update screen
 4. Comment date update screen
 5. Settings tab for customizing visible tabs
-6. Custom time range selection for precise control
+6. Modern time picker with presets
 
 == Changelog ==
+
+= 1.3 =
+* Added modern time picker interface with flatpickr integration
+* Added time presets (Business Hours, Morning, Afternoon, Evening)
+* Implemented tab content caching for ultra-fast tab switching
+* Replaced manual time inputs with elegant time pickers
+* Added visual feedback during tab switching with loading indicators
+* Improved CSS styling for better UI/UX
+* Optimized JavaScript with modular structure
+* Enhanced AJAX handling for better performance
+* Added tab state persistence between page loads
+* Updated minimum WordPress version to 6.7 for better performance
+* Improved error handling and validation
+* Reduced server load with more efficient tab rendering
+* Fixed UI flickering when switching between tabs
+* Added loading indicators during AJAX operations
+* Implemented dynamic browser history updates for better navigation
 
 = 1.2 =
 * Added custom time range functionality for precise time control
@@ -136,6 +153,9 @@ Yes, the plugin updates WordPress core date fields that are independent of page 
 * Added responsive design improvements for mobile admin
 
 == Upgrade Notice ==
+= 1.3 =
+Major UI/UX improvements with modern time picker, time presets, and significant performance boost for tab switching. Requires WordPress 6.7+.
+
 = 1.2 =
 Adds custom time range functionality to allow specifying exact time windows for updates, providing more precise control over date distributions.
 

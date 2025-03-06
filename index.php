@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: Bulk Date Update
- * Version: 1.2
+ * Version: 1.3.1
  * Description: Change the Post Update date for all posts in one click. This will help your blog in search engines and your blog will look alive. Do this every week or month.
  * Author: wplove.co
  * Author URI: https://tomrobak.com
@@ -11,7 +11,7 @@
  * License: GPL2
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Requires PHP: 8.0
- * Requires at least: 5.0
+ * Requires at least: 6.7
  
 
     Bulk Date Update is free software: you can redistribute it and/or modify
@@ -29,7 +29,7 @@
 */
 
 // Define plugin version constant
-define('BULK_DATE_UPDATE_VERSION', '1.2');
+define('BULK_DATE_UPDATE_VERSION', '1.3.1');
 
 /**
  * Add plugin menu item to WordPress admin
@@ -151,36 +151,28 @@ function bulk_post_update_date_admin_enqueue_scripts(string $hook): void {
     wp_enqueue_script('momentjs', 'https://cdn.jsdelivr.net/momentjs/latest/moment.min.js', [], '2.29.4', true);
     wp_enqueue_script('daterangepicker', 'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js', ['jquery', 'momentjs'], '3.1.0', true);
     wp_enqueue_style('daterangepicker', 'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css', [], '3.1.0');
-    wp_enqueue_style('bulkupdatedate', plugins_url('/style.css', __FILE__), [], BULK_DATE_UPDATE_VERSION);
     
-    // Add inline script to improve tab switching performance
-    wp_add_inline_script('jquery', '
-        // Pre-fetch tab content
-        jQuery(document).ready(function($) {
-            var tabCache = {};
-            
-            // Intercept tab clicks to store tab selection
-            $(".nav-tab-wrapper a").on("click", function(e) {
-                // Store the clicked tab in sessionStorage
-                sessionStorage.setItem("bulkDateUpdateActiveTab", $(this).attr("href"));
-            });
-            
-            // Check if there is a saved tab
-            var activeTab = sessionStorage.getItem("bulkDateUpdateActiveTab");
-            if (activeTab) {
-                // If the current URL does not match the saved tab, do not restore
-                var currentTab = window.location.href.split("tab=")[1];
-                if (currentTab && activeTab.indexOf(currentTab) !== -1) {
-                    // Tab is already correctly set
-                } else if (!currentTab && activeTab.indexOf("tab=settings") !== -1) {
-                    // We are on the main page and settings was selected
-                } else {
-                    // Restore the saved tab
-                    window.location.href = activeTab;
-                }
-            }
-        });
-    ');
+    // Add flatpickr for modern time picker
+    wp_enqueue_script('flatpickr', 'https://cdn.jsdelivr.net/npm/flatpickr', ['jquery'], '4.6.13', true);
+    wp_enqueue_style('flatpickr', 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css', [], '4.6.13');
+    
+    // Plugin specific styles and scripts
+    wp_enqueue_style('bulkupdatedate', plugins_url('/style.css', __FILE__), [], BULK_DATE_UPDATE_VERSION);
+    wp_register_script('bulkupdatedate-admin', plugins_url('/js/admin.js', __FILE__), ['jquery', 'flatpickr', 'wp-util'], BULK_DATE_UPDATE_VERSION, true);
+    
+    // Localize script with settings and translatable strings
+    wp_localize_script('bulkupdatedate-admin', 'bulkDateUpdate', [
+        'ajaxUrl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('bulk_date_update_nonce'),
+        'currentTab' => isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'settings',
+        'strings' => [
+            'invalidTimeRange' => __('Start time cannot be later than end time.', 'bulk-post-update-date'),
+            'updatingSettings' => __('Updating settings...', 'bulk-post-update-date'),
+            'errorUpdatingSettings' => __('Error updating settings. Please try again.', 'bulk-post-update-date')
+        ]
+    ]);
+    
+    wp_enqueue_script('bulkupdatedate-admin');
 }
 
 add_action('admin_enqueue_scripts', 'bulk_post_update_date_admin_enqueue_scripts');

@@ -194,15 +194,26 @@ $post_types = get_post_types($post_type_args, 'objects', 'and');
                         
                         <div id="time_range_controls" class="time-range-controls" style="display: none;">
                             <div class="time-range-row">
-                                <label for="start_time"><?php _e('Start Time:', 'bulk-post-update-date'); ?></label>
-                                <input type="time" id="start_time" name="start_time" value="00:00" />
+                                <div class="time-input-wrapper">
+                                    <label for="start_time"><?php _e('Start Time:', 'bulk-post-update-date'); ?></label>
+                                    <input type="text" id="start_time" name="start_time" value="00:00" class="time-picker" placeholder="<?php _e('Select start time', 'bulk-post-update-date'); ?>" />
+                                </div>
                                 
-                                <label for="end_time" style="margin-left: 15px;"><?php _e('End Time:', 'bulk-post-update-date'); ?></label>
-                                <input type="time" id="end_time" name="end_time" value="23:59" />
+                                <div class="time-input-wrapper">
+                                    <label for="end_time"><?php _e('End Time:', 'bulk-post-update-date'); ?></label>
+                                    <input type="text" id="end_time" name="end_time" value="23:59" class="time-picker" placeholder="<?php _e('Select end time', 'bulk-post-update-date'); ?>" />
+                                </div>
                             </div>
                             <p class="description">
                                 <?php _e('Specify a time range for your date updates. The plugin will randomly generate times within this range.', 'bulk-post-update-date'); ?>
                             </p>
+                            <div class="time-presets">
+                                <span class="time-preset-label"><?php _e('Quick presets:', 'bulk-post-update-date'); ?></span>
+                                <button type="button" class="button time-preset" data-start="09:00" data-end="17:00"><?php _e('Business Hours (9AM-5PM)', 'bulk-post-update-date'); ?></button>
+                                <button type="button" class="button time-preset" data-start="08:00" data-end="12:00"><?php _e('Morning (8AM-12PM)', 'bulk-post-update-date'); ?></button>
+                                <button type="button" class="button time-preset" data-start="13:00" data-end="18:00"><?php _e('Afternoon (1PM-6PM)', 'bulk-post-update-date'); ?></button>
+                                <button type="button" class="button time-preset" data-start="19:00" data-end="23:00"><?php _e('Evening (7PM-11PM)', 'bulk-post-update-date'); ?></button>
+                            </div>
                         </div>
                     </td>
                 </tr>
@@ -272,115 +283,4 @@ $post_types = get_post_types($post_type_args, 'objects', 'and');
             <a href="https://wplove.co/articles/" target="_blank" class="button"><?php _e('Read Articles', 'bulk-post-update-date'); ?></a>
         </div>
     </div>
-</div>
-
-<script>
-    jQuery(document).ready(function($){
-        // Initialize date range picker
-        $('input[name="range"]').daterangepicker({
-            maxDate: '<?php echo date('m/d/y'); ?>',
-            locale: {
-                format: 'MM/DD/YY'
-            }
-        });
-
-        // Show/hide custom range input based on selection
-        $('#distribute').on('change', function(){
-            let val = $(this).val();
-            if(val == 0) {
-                $('#range_row').fadeIn();
-                // If custom range is enabled, check if time range was previously enabled
-                if($('#enable_time_range').is(':checked')) {
-                    $('#time_range_controls').fadeIn();
-                }
-            } else {
-                $('#range_row').fadeOut();
-                $('#time_range_controls').fadeOut();
-            }
-        });
-        
-        // Toggle time range controls
-        $('#enable_time_range').on('change', function() {
-            if($(this).is(':checked')) {
-                $('#time_range_controls').fadeIn(300);
-            } else {
-                $('#time_range_controls').fadeOut(200);
-            }
-        });
-        
-        // Validate time inputs
-        $('#start_time, #end_time').on('change', function() {
-            validateTimeRange();
-        });
-        
-        function validateTimeRange() {
-            let startTime = $('#start_time').val();
-            let endTime = $('#end_time').val();
-            
-            if (startTime && endTime && startTime > endTime) {
-                alert('<?php _e('Start time cannot be later than end time.', 'bulk-post-update-date'); ?>');
-                $('#end_time').val('23:59');
-            }
-        }
-        
-        // Tab settings checkbox handling via AJAX
-        $('input[type="checkbox"][id^="tab_"]').on('change', function() {
-            var tabId = $(this).attr('id').replace('tab_', '');
-            var isChecked = $(this).is(':checked');
-            
-            // Show loading feedback
-            $('#settings-response')
-                .removeClass('hidden notice-success notice-error')
-                .addClass('notice')
-                .html('<p><span class="spinner is-active" style="float: none; margin: 0 5px 0 0;"></span> <?php _e('Updating settings...', 'bulk-post-update-date'); ?></p>')
-                .show();
-            
-            // Send AJAX request to update tab visibility
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'bulk_date_update_toggle_tab',
-                    tab: tabId,
-                    enabled: isChecked ? 1 : 0,
-                    nonce: '<?php echo wp_create_nonce('bulk_date_update_toggle_tab'); ?>'
-                },
-                success: function(response) {
-                    if(response.success) {
-                        $('#settings-response')
-                            .removeClass('notice-error')
-                            .addClass('notice-success')
-                            .html('<p>' + response.data.message + '</p>');
-                            
-                        // Update tab visibility in real-time
-                        if(isChecked) {
-                            if($('#bulk-date-tabs a[data-tab="' + tabId + '"]').length === 0) {
-                                location.reload(); // Reload if tab doesn't exist in DOM yet
-                            } else {
-                                $('#bulk-date-tabs a[data-tab="' + tabId + '"]').removeClass('hidden');
-                            }
-                        } else {
-                            $('#bulk-date-tabs a[data-tab="' + tabId + '"]').addClass('hidden');
-                        }
-                    } else {
-                        $('#settings-response')
-                            .removeClass('notice-success')
-                            .addClass('notice-error')
-                            .html('<p>' + response.data.message + '</p>');
-                    }
-                    
-                    // Hide message after 3 seconds
-                    setTimeout(function() {
-                        $('#settings-response').fadeOut();
-                    }, 3000);
-                },
-                error: function() {
-                    $('#settings-response')
-                        .removeClass('notice-success')
-                        .addClass('notice-error')
-                        .html('<p><?php _e('Error updating settings. Please try again.', 'bulk-post-update-date'); ?></p>');
-                }
-            });
-        });
-    });
-</script> 
+</div> 
