@@ -5,7 +5,7 @@ Donate link: https://wplove.co
 Requires at least: 5.0
 Tested up to: 6.7.2
 Requires PHP: 8.0
-Stable tag: 1.0
+Stable tag: 1.2
 License: GPL2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,13 +31,16 @@ Search engines like Google prioritize fresh content in their rankings. When your
 * Bulk update **Comments** dates for added realism
 * **Random distribution** of dates for natural appearance
 * Custom date range selection for precise control
+* NEW: **Custom time range** for even more precise control
 * Option to update published date, modified date, or both
 * Dedicated admin menu for quick access
 * Optimized performance for sites with thousands of posts
+* Customizable admin interface with selectable tabs
+* Faster tab switching for better performance
+* More date range options (3 days, 7 days)
 
 #### Support
-* Community support via [wplove.co](https://wplove.co)
-* Premium support available for customization
+* Community support via [wplove.co](https://wplove.co/community/space/plugins-themes/home)
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/bulk-date-update` directory, or install directly through the WordPress plugins screen
@@ -61,8 +64,14 @@ No, this plugin only changes the date metadata of your posts, it doesn't modify 
 = How often should I update post dates? =
 For optimal SEO benefits without appearing manipulative, we recommend updating post dates every 3-4 weeks, and ideally after making actual content improvements.
 
+= Can I choose specific times for my date updates? =
+Yes! In version 1.2, we've added a custom time range feature that lets you specify the time window for updates. When enabled, the plugin will generate random times within your specified range (e.g., between 9:00 AM and 5:00 PM) for a more realistic update pattern.
+
 = Will search engines penalize me for using this? =
 When used responsibly (not daily), search engines typically won't penalize date updates. However, it's always recommended to follow this practice in moderation and in combination with actual content updates.
+
+= Can I customize which tabs appear in the interface? =
+Yes! We've added a Settings tab that allows you to choose which tabs appear in the interface. This helps streamline your workflow by showing only the content types you need.
 
 = Is the plugin compatible with WordPress multisite? =
 Yes, the plugin works on multisite installations, but must be activated on each site individually.
@@ -75,8 +84,35 @@ Yes, the plugin updates WordPress core date fields that are independent of page 
 2. Pages date update screen
 3. Custom post type date update screen
 4. Comment date update screen
+5. Settings tab for customizing visible tabs
+6. Custom time range selection for precise control
 
 == Changelog ==
+
+= 1.2 =
+* Added custom time range functionality for precise time control
+* Users can now specify start and end times for date updates
+* Time selections work in both 12-hour and 24-hour format based on WordPress settings
+* Added validation to prevent invalid time entries
+* Updates are now spread randomly within the specified time range for more natural distribution
+* Improved time handling for both posts and comments
+* Enhanced user interface for time selection controls
+* Added additional validation for time inputs
+
+= 1.1 =
+* Added new Settings tab as the first tab for easy configuration
+* Implemented AJAX-based tab management for toggling tab visibility without page reload
+* Added 3 days and 7 days options to the date distribution dropdown
+* Improved tab switching performance for smoother user experience
+* Enhanced user interface with smoother transitions
+* Updated resource section with WordPress for Photographers community
+* Added Posts Remastered resource for improving SEO
+* Added link to wplove.co blog for additional tutorials
+* Added Plugin Support button for easier access to support
+* Improved UI with better icon alignment and spacing
+* Added activation hook to set default tab settings
+* Updated all community links and removed outdated information
+* Improved mobile responsiveness for better experience on smaller screens
 
 = 1.0 =
 * Complete plugin rebranding and code modernization
@@ -100,5 +136,8 @@ Yes, the plugin updates WordPress core date fields that are independent of page 
 * Added responsive design improvements for mobile admin
 
 == Upgrade Notice ==
-= 1.0 =
-Major update with improved performance, security enhancements, modern UI, and compatibility with latest WordPress and PHP versions.
+= 1.2 =
+Adds custom time range functionality to allow specifying exact time windows for updates, providing more precise control over date distributions.
+
+= 1.1 =
+Adds customizable tabs for easier workflow, faster performance, additional date range options, and improved resource links.
