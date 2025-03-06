@@ -27,6 +27,23 @@ function handleComments(): int {
 	[$from, $to] = getFromAndToDates();
 	$total = 0;
 	
+	// Get custom time range settings if enabled
+	$use_custom_time = isset($_POST['enable_time_range']) && $_POST['enable_time_range'] == 1;
+    $start_time = isset($_POST['start_time']) ? sanitize_text_field($_POST['start_time']) : '00:00';
+    $end_time = isset($_POST['end_time']) ? sanitize_text_field($_POST['end_time']) : '23:59';
+    
+    // Validate time format (should be in 24-hour format: HH:MM)
+    if (!preg_match('/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/', $start_time)) {
+        $start_time = '00:00';
+    }
+    if (!preg_match('/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/', $end_time)) {
+        $end_time = '23:59';
+    }
+    
+    // Convert times to seconds since midnight for easier random generation
+    $start_time_seconds = strtotime($start_time) - strtotime('00:00');
+    $end_time_seconds = strtotime($end_time) - strtotime('00:00');
+	
 	// Process in smaller batches for better performance
 	$batch_size = 50;
 	$total_comments = count($comments);
@@ -44,8 +61,21 @@ function handleComments(): int {
 			}
 
 			// Generate random time between adjusted dates
-			$time = rand($_from, $_to);
-			$time = date("Y-m-d H:i:s", $time);
+			$time_timestamp = rand($_from, $_to);
+			
+			// If custom time range is enabled, adjust the time portion of the date
+            if ($use_custom_time) {
+                // Get the date portion without time
+                $date_only = date('Y-m-d', $time_timestamp);
+                
+                // Generate random seconds between start and end time
+                $random_seconds = rand($start_time_seconds, $end_time_seconds);
+                
+                // Create a new timestamp with the date and random time
+                $time_timestamp = strtotime($date_only) + $random_seconds;
+            }
+			
+			$time = date("Y-m-d H:i:s", $time_timestamp);
 			$time_gmt = get_gmt_from_date($time);
 			
 			// Update the comment date

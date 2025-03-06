@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: Bulk Date Update
- * Version: 1.1
+ * Version: 1.2
  * Description: Change the Post Update date for all posts in one click. This will help your blog in search engines and your blog will look alive. Do this every week or month.
  * Author: wplove.co
  * Author URI: https://tomrobak.com
@@ -29,7 +29,7 @@
 */
 
 // Define plugin version constant
-define('BULK_DATE_UPDATE_VERSION', '1.1');
+define('BULK_DATE_UPDATE_VERSION', '1.2');
 
 /**
  * Add plugin menu item to WordPress admin
@@ -344,6 +344,7 @@ function processPostTypeUpdate(string $type): int {
     $to   = current_time('timestamp', 0);
     $now  = current_time('timestamp', 0);
 
+    // Handle custom date range
     if ($from == 0 && isset($_POST['range'])) {
         $range = explode('-', sanitize_text_field($_POST['range']));
         if (count($range) == 2) {
@@ -359,6 +360,23 @@ function processPostTypeUpdate(string $type): int {
             $from = strtotime('-3 hours', $now);
         }
     }
+
+    // Handle custom time range
+    $use_custom_time = isset($_POST['enable_time_range']) && $_POST['enable_time_range'] == 1;
+    $start_time = isset($_POST['start_time']) ? sanitize_text_field($_POST['start_time']) : '00:00';
+    $end_time = isset($_POST['end_time']) ? sanitize_text_field($_POST['end_time']) : '23:59';
+    
+    // Validate time format (should be in 24-hour format: HH:MM)
+    if (!preg_match('/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/', $start_time)) {
+        $start_time = '00:00';
+    }
+    if (!preg_match('/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/', $end_time)) {
+        $end_time = '23:59';
+    }
+    
+    // Convert times to seconds since midnight for easier random generation
+    $start_time_seconds = strtotime($start_time) - strtotime('00:00');
+    $end_time_seconds = strtotime($end_time) - strtotime('00:00');
 
     // Ensure from is before to
     if ($from > $to) {
@@ -376,8 +394,22 @@ function processPostTypeUpdate(string $type): int {
         $batch_ids = array_slice($ids, $i, $batch_size);
         
         foreach ($batch_ids as $id) {
-            $time = rand($from, $to);
-            $time = date("Y-m-d H:i:s", $time);
+            // Generate random date within the specified range
+            $time_timestamp = rand($from, $to);
+            
+            // If custom time range is enabled, adjust the time portion of the date
+            if ($use_custom_time) {
+                // Get the date portion without time
+                $date_only = date('Y-m-d', $time_timestamp);
+                
+                // Generate random seconds between start and end time
+                $random_seconds = rand($start_time_seconds, $end_time_seconds);
+                
+                // Create a new timestamp with the date and random time
+                $time_timestamp = strtotime($date_only) + $random_seconds;
+            }
+            
+            $time = date("Y-m-d H:i:s", $time_timestamp);
             $time_gmt = get_gmt_from_date($time);
             
             if ($field === 'date_both') {

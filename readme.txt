@@ -5,7 +5,7 @@ Donate link: https://wplove.co
 Requires at least: 5.0
 Tested up to: 6.7.2
 Requires PHP: 8.0
-Stable tag: 1.1
+Stable tag: 1.2
 License: GPL2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,12 +31,13 @@ Search engines like Google prioritize fresh content in their rankings. When your
 * Bulk update **Comments** dates for added realism
 * **Random distribution** of dates for natural appearance
 * Custom date range selection for precise control
+* NEW: **Custom time range** for even more precise control
 * Option to update published date, modified date, or both
 * Dedicated admin menu for quick access
 * Optimized performance for sites with thousands of posts
-* NEW: Customizable admin interface with selectable tabs
-* NEW: Faster tab switching for better performance
-* NEW: More date range options (3 days, 7 days)
+* Customizable admin interface with selectable tabs
+* Faster tab switching for better performance
+* More date range options (3 days, 7 days)
 
 #### Support
 * Community support via [wplove.co](https://wplove.co/community/space/plugins-themes/home)
@@ -63,11 +64,14 @@ No, this plugin only changes the date metadata of your posts, it doesn't modify 
 = How often should I update post dates? =
 For optimal SEO benefits without appearing manipulative, we recommend updating post dates every 3-4 weeks, and ideally after making actual content improvements.
 
+= Can I choose specific times for my date updates? =
+Yes! In version 1.2, we've added a custom time range feature that lets you specify the time window for updates. When enabled, the plugin will generate random times within your specified range (e.g., between 9:00 AM and 5:00 PM) for a more realistic update pattern.
+
 = Will search engines penalize me for using this? =
 When used responsibly (not daily), search engines typically won't penalize date updates. However, it's always recommended to follow this practice in moderation and in combination with actual content updates.
 
 = Can I customize which tabs appear in the interface? =
-Yes! In version 1.1, we've added a Settings tab that allows you to choose which tabs appear in the interface. This helps streamline your workflow by showing only the content types you need.
+Yes! We've added a Settings tab that allows you to choose which tabs appear in the interface. This helps streamline your workflow by showing only the content types you need.
 
 = Is the plugin compatible with WordPress multisite? =
 Yes, the plugin works on multisite installations, but must be activated on each site individually.
@@ -81,8 +85,19 @@ Yes, the plugin updates WordPress core date fields that are independent of page 
 3. Custom post type date update screen
 4. Comment date update screen
 5. Settings tab for customizing visible tabs
+6. Custom time range selection for precise control
 
 == Changelog ==
+
+= 1.2 =
+* Added custom time range functionality for precise time control
+* Users can now specify start and end times for date updates
+* Time selections work in both 12-hour and 24-hour format based on WordPress settings
+* Added validation to prevent invalid time entries
+* Updates are now spread randomly within the specified time range for more natural distribution
+* Improved time handling for both posts and comments
+* Enhanced user interface for time selection controls
+* Added additional validation for time inputs
 
 = 1.1 =
 * Added new Settings tab as the first tab for easy configuration
@@ -121,8 +136,8 @@ Yes, the plugin updates WordPress core date fields that are independent of page 
 * Added responsive design improvements for mobile admin
 
 == Upgrade Notice ==
+= 1.2 =
+Adds custom time range functionality to allow specifying exact time windows for updates, providing more precise control over date distributions.
+
 = 1.1 =
 Adds customizable tabs for easier workflow, faster performance, additional date range options, and improved resource links.
-
-= 1.0 =
-Major update with improved performance, security enhancements, modern UI, and compatibility with latest WordPress and PHP versions.

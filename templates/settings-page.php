@@ -184,6 +184,26 @@ $post_types = get_post_types($post_type_args, 'objects', 'and');
                         <p class="description">
                             <?php _e('Select range of date in which you want to spread the dates', 'bulk-post-update-date'); ?>
                         </p>
+                        
+                        <div class="time-range-toggle">
+                            <label>
+                                <input type="checkbox" id="enable_time_range" name="enable_time_range" value="1">
+                                <?php _e('Enable Custom Time Range', 'bulk-post-update-date'); ?>
+                            </label>
+                        </div>
+                        
+                        <div id="time_range_controls" class="time-range-controls" style="display: none;">
+                            <div class="time-range-row">
+                                <label for="start_time"><?php _e('Start Time:', 'bulk-post-update-date'); ?></label>
+                                <input type="time" id="start_time" name="start_time" value="00:00" />
+                                
+                                <label for="end_time" style="margin-left: 15px;"><?php _e('End Time:', 'bulk-post-update-date'); ?></label>
+                                <input type="time" id="end_time" name="end_time" value="23:59" />
+                            </div>
+                            <p class="description">
+                                <?php _e('Specify a time range for your date updates. The plugin will randomly generate times within this range.', 'bulk-post-update-date'); ?>
+                            </p>
+                        </div>
                     </td>
                 </tr>
 
@@ -269,10 +289,39 @@ $post_types = get_post_types($post_type_args, 'objects', 'and');
             let val = $(this).val();
             if(val == 0) {
                 $('#range_row').fadeIn();
+                // If custom range is enabled, check if time range was previously enabled
+                if($('#enable_time_range').is(':checked')) {
+                    $('#time_range_controls').fadeIn();
+                }
             } else {
                 $('#range_row').fadeOut();
+                $('#time_range_controls').fadeOut();
             }
         });
+        
+        // Toggle time range controls
+        $('#enable_time_range').on('change', function() {
+            if($(this).is(':checked')) {
+                $('#time_range_controls').fadeIn(300);
+            } else {
+                $('#time_range_controls').fadeOut(200);
+            }
+        });
+        
+        // Validate time inputs
+        $('#start_time, #end_time').on('change', function() {
+            validateTimeRange();
+        });
+        
+        function validateTimeRange() {
+            let startTime = $('#start_time').val();
+            let endTime = $('#end_time').val();
+            
+            if (startTime && endTime && startTime > endTime) {
+                alert('<?php _e('Start time cannot be later than end time.', 'bulk-post-update-date'); ?>');
+                $('#end_time').val('23:59');
+            }
+        }
         
         // Tab settings checkbox handling via AJAX
         $('input[type="checkbox"][id^="tab_"]').on('change', function() {
