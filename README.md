@@ -1,7 +1,5 @@
 # Bulk Date Update
 
-![Bulk Date Update Banner](assets/banner-772x250.jpg)
-
 > Change the post update date for all posts and pages in one click to improve SEO and keep your blog looking fresh and active.
 
 [![WordPress Plugin Version](https://img.shields.io/wordpress/plugin/v/bulk-post-update-date)](https://wordpress.org/plugins/bulk-post-update-date/)
