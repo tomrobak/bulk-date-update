@@ -5,7 +5,7 @@ Donate link: https://wplove.co
 Requires at least: 6.7
 Tested up to: 6.7.2
 Requires PHP: 8.0
-Stable tag: 1.3
+Stable tag: 1.4
 License: GPL2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,14 +30,14 @@ Search engines like Google prioritize fresh content in their rankings. When your
 * Bulk update **Any Custom Post Type** with taxonomy filtering 
 * Bulk update **Comments** dates for added realism
 * **Random distribution** of dates for natural appearance
-* Custom date range selection for precise control
-* **Modern time picker** with presets for easy time selection
+* **Modern date and time pickers** with intuitive presets
+* Completely redesigned UI for better user experience
+* One-click presets for common time periods (Today, Last Week, Last Month)
 * Option to update published date, modified date, or both
 * Dedicated admin menu for quick access
-* Optimized performance with tab content caching
+* Optimized performance with minimal page reloads
 * Customizable admin interface with selectable tabs
 * Ultra-fast tab switching for better user experience
-* More date range options (3 days, 7 days)
 
 #### Support
 * Community support via [wplove.co](https://wplove.co/community/space/plugins-themes/home)
@@ -64,8 +64,8 @@ No, this plugin only changes the date metadata of your posts, it doesn't modify 
 = How often should I update post dates? =
 For optimal SEO benefits without appearing manipulative, we recommend updating post dates every 3-4 weeks, and ideally after making actual content improvements.
 
-= Can I choose specific times for my date updates? =
-Yes! Our modern time picker interface gives you precise control over time ranges, including common presets like Business Hours (9AM-5PM) or Evening hours. This helps create more natural and realistic update patterns.
+= Can I choose specific dates and times for my date updates? =
+Yes! Version 1.4 introduces a fully redesigned date and time selection interface with intuitive presets. Select from common ranges like "Today," "Last 7 Days," or "Last Month" with a single click, or use the modern calendar interface for custom selections.
 
 = Will search engines penalize me for using this? =
 When used responsibly (not daily), search engines typically won't penalize date updates. However, it's always recommended to follow this practice in moderation and in combination with actual content updates.
@@ -85,9 +85,33 @@ Yes, the plugin updates WordPress core date fields that are independent of page 
 3. Custom post type date update screen
 4. Comment date update screen
 5. Settings tab for customizing visible tabs
-6. Modern time picker with presets
+6. Modern date picker with presets
+7. Time range selection interface
 
 == Changelog ==
+
+= 1.4 =
+* Completely redesigned date range picker with modern UI
+* Replaced the old date range picker with intuitive Flatpickr integration
+* Added one-click date range presets (Today, Yesterday, Last 7 Days, etc.)
+* Implemented visual date selection with modern calendar interface
+* Unified the UI style between date and time pickers for consistency
+* Improved date validation for better error prevention
+* Enhanced visual feedback for date selection
+* Added separate start and end date fields for easier range selection
+* Improved mobile experience for date selection
+* Enhanced preset buttons with active state indicators
+* Fixed potential date format issues with international users
+* Improved accessibility for date and time selectors
+* Optimized date handling code for better performance
+
+= 1.3.1 =
+* Fixed critical issue with tab switching causing infinite refresh loops
+* Removed problematic tab caching mechanism that was causing navigation issues
+* Simplified tab navigation system for better reliability
+* Improved JavaScript architecture for better stability
+* Maintained all UI improvements from version 1.3 while fixing performance issues
+* Enhanced tab switching to respect normal browser navigation
 
 = 1.3 =
 * Added modern time picker interface with flatpickr integration
@@ -153,11 +177,14 @@ Yes, the plugin updates WordPress core date fields that are independent of page 
 * Added responsive design improvements for mobile admin
 
 == Upgrade Notice ==
+= 1.4 =
+Major UI improvement with a completely redesigned date range picker featuring one-click presets and a modern calendar interface.
+
+= 1.3.1 =
+IMPORTANT: Fixes critical issue with tab navigation that caused infinite refresh loops. This update is strongly recommended for all users.
+
 = 1.3 =
 Major UI/UX improvements with modern time picker, time presets, and significant performance boost for tab switching. Requires WordPress 6.7+.
 
 = 1.2 =
 Adds custom time range functionality to allow specifying exact time windows for updates, providing more precise control over date distributions.
-
-= 1.1 =
-Adds customizable tabs for easier workflow, faster performance, additional date range options, and improved resource links.
