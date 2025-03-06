@@ -1,7 +1,5 @@
 # Bulk Date Update
 
-> Change the post update date for all posts and pages in one click to improve SEO and keep your blog looking fresh and active.
-
 ## Description
 
 Bulk Date Update allows you to quickly update the dates of your WordPress content, including posts, pages, custom post types, and comments. This optimization helps search engines recognize your content as fresh and relevant, potentially improving your search rankings.
