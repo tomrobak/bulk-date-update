@@ -22,7 +22,8 @@
     transition: var(--transition);
 }
 
-.form-table input.time-picker {
+.form-table input.time-picker,
+.form-table input.date-picker {
     min-width: auto;
     width: 150px;
     padding: 0.375rem 0.75rem;
@@ -37,9 +38,16 @@
     cursor: pointer;
 }
 
+.form-table input.date-picker {
+    background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>') no-repeat right 0.75rem center;
+    background-size: 16px;
+    width: 180px;
+}
+
 .form-table input[type=text]:focus, 
 .form-table select:focus,
-.form-table input.time-picker:focus {
+.form-table input.time-picker:focus,
+.form-table input.date-picker:focus {
     border-color: #86b7fe;
     outline: 0;
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
@@ -348,6 +356,65 @@
     color: #fff;
 }
 
+/* Date range container */
+.date-range-container {
+    margin-top: 5px;
+    margin-bottom: 15px;
+}
+
+.date-inputs {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+    gap: 20px;
+}
+
+.date-input-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.date-input-wrapper label {
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.date-presets {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.date-preset-label {
+    font-weight: 500;
+    margin-right: 5px;
+}
+
+.date-preset {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    padding: 5px 10px;
+    border-radius: var(--border-radius);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.date-preset:hover {
+    background-color: #e9ecef;
+}
+
+.date-preset.active {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
 /* Time range controls */
 .time-range-toggle {
     margin-top: 15px;
@@ -435,6 +502,11 @@
 .flatpickr-calendar {
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
+    width: auto;
+}
+
+.flatpickr-calendar.rangeMode {
+    width: auto;
 }
 
 .flatpickr-time {
@@ -443,6 +515,61 @@
 
 .flatpickr-hour, .flatpickr-minute {
     font-weight: bold;
+}
+
+.flatpickr-months .flatpickr-month {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year {
+    color: white;
+    font-weight: 600;
+}
+
+.flatpickr-weekday {
+    background-color: var(--primary-color);
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+}
+
+.flatpickr-day.selected, 
+.flatpickr-day.startRange, 
+.flatpickr-day.endRange, 
+.flatpickr-day.selected.inRange, 
+.flatpickr-day.startRange.inRange, 
+.flatpickr-day.endRange.inRange, 
+.flatpickr-day.selected:focus, 
+.flatpickr-day.startRange:focus, 
+.flatpickr-day.endRange:focus, 
+.flatpickr-day.selected:hover, 
+.flatpickr-day.startRange:hover, 
+.flatpickr-day.endRange:hover, 
+.flatpickr-day.selected.prevMonthDay, 
+.flatpickr-day.startRange.prevMonthDay, 
+.flatpickr-day.endRange.prevMonthDay, 
+.flatpickr-day.selected.nextMonthDay, 
+.flatpickr-day.startRange.nextMonthDay, 
+.flatpickr-day.endRange.nextMonthDay {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.flatpickr-day.inRange, 
+.flatpickr-day.prevMonthDay.inRange, 
+.flatpickr-day.nextMonthDay.inRange, 
+.flatpickr-day.today.inRange, 
+.flatpickr-day.prevMonthDay.today.inRange, 
+.flatpickr-day.nextMonthDay.today.inRange, 
+.flatpickr-day:hover, 
+.flatpickr-day.prevMonthDay:hover, 
+.flatpickr-day.nextMonthDay:hover, 
+.flatpickr-day:focus, 
+.flatpickr-day.prevMonthDay:focus, 
+.flatpickr-day.nextMonthDay:focus {
+    background: #e6f2ff;
+    border-color: #e6f2ff;
 }
 
 /* Tab loader */

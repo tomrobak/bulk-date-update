@@ -1,10 +1,10 @@
 /**
  * Bulk Date Update - Admin JavaScript
  * 
- * Handles all the admin interactions including modern time picker
- * and performance optimizations for tab switching.
+ * Handles all the admin interactions including modern date/time pickers
+ * and performance optimizations.
  * 
- * @since 1.3
+ * @since 1.4
  */
 
 (function($) {
@@ -16,25 +16,132 @@
          * Initialize the admin functionality
          */
         init: function() {
-            this.setupDateRangePicker();
+            this.setupDatePickers();
             this.setupTimePickers();
             this.setupDistributeToggle();
             this.setupTimeRangeToggle();
+            this.setupDateRangePresets();
             this.setupTabs();
+            this.setupToggleTabs();
             this.setupFormValidation();
         },
 
         /**
-         * Setup the date range picker
+         * Setup modern date pickers using Flatpickr
          */
-        setupDateRangePicker: function() {
-            $('input[name="range"]').daterangepicker({
-                maxDate: new Date(),
-                locale: {
-                    format: 'MM/DD/YY'
-                },
-                autoUpdateInput: true,
-                autoApply: true
+        setupDatePickers: function() {
+            if ($('#start_date').length && $('#end_date').length) {
+                // Start date picker
+                const startDatePicker = flatpickr('#start_date', {
+                    dateFormat: 'm/d/y',
+                    maxDate: 'today',
+                    onClose: function(selectedDates, dateStr) {
+                        // Update the end date min when start date changes
+                        if (selectedDates[0]) {
+                            endDatePicker.set('minDate', selectedDates[0]);
+                            
+                            // Update the hidden range field
+                            BulkDateAdmin.updateRangeField();
+                        }
+                    }
+                });
+                
+                // End date picker
+                const endDatePicker = flatpickr('#end_date', {
+                    dateFormat: 'm/d/y',
+                    maxDate: 'today',
+                    onClose: function(selectedDates, dateStr) {
+                        // Update the start date max when end date changes
+                        if (selectedDates[0]) {
+                            startDatePicker.set('maxDate', selectedDates[0]);
+                            
+                            // Update the hidden range field
+                            BulkDateAdmin.updateRangeField();
+                        }
+                    }
+                });
+                
+                // Set initial dates from the range field
+                const rangeParts = $('#range').val().split(' - ');
+                if (rangeParts.length === 2) {
+                    startDatePicker.setDate(rangeParts[0]);
+                    endDatePicker.setDate(rangeParts[1]);
+                } else {
+                    // Set default values: 3 days ago to today
+                    const today = new Date();
+                    const threeDaysAgo = new Date();
+                    threeDaysAgo.setDate(today.getDate() - 3);
+                    
+                    startDatePicker.setDate(threeDaysAgo);
+                    endDatePicker.setDate(today);
+                    
+                    // Update the hidden range field
+                    BulkDateAdmin.updateRangeField();
+                }
+            }
+        },
+
+        /**
+         * Update the hidden range field with current date picker values
+         */
+        updateRangeField: function() {
+            const startDate = $('#start_date').val();
+            const endDate = $('#end_date').val();
+            
+            if (startDate && endDate) {
+                $('#range').val(startDate + ' - ' + endDate);
+            }
+        },
+
+        /**
+         * Setup date range presets
+         */
+        setupDateRangePresets: function() {
+            $('.date-preset').on('click', function() {
+                const preset = $(this).data('preset');
+                let startDate, endDate;
+                
+                const startDatePicker = $('#start_date')[0]._flatpickr;
+                const endDatePicker = $('#end_date')[0]._flatpickr;
+                
+                switch(preset) {
+                    case 'today':
+                        startDate = bulkDateUpdate.dates.today;
+                        endDate = bulkDateUpdate.dates.today;
+                        break;
+                    case 'yesterday':
+                        startDate = bulkDateUpdate.dates.yesterday;
+                        endDate = bulkDateUpdate.dates.yesterday;
+                        break;
+                    case 'last7Days':
+                        startDate = bulkDateUpdate.dates.last7Start;
+                        endDate = bulkDateUpdate.dates.today;
+                        break;
+                    case 'last30Days':
+                        startDate = bulkDateUpdate.dates.last30Start;
+                        endDate = bulkDateUpdate.dates.today;
+                        break;
+                    case 'thisMonth':
+                        startDate = bulkDateUpdate.dates.thisMonthStart;
+                        endDate = bulkDateUpdate.dates.today;
+                        break;
+                    case 'lastMonth':
+                        startDate = bulkDateUpdate.dates.lastMonthStart;
+                        endDate = bulkDateUpdate.dates.lastMonthEnd;
+                        break;
+                }
+                
+                if (startDate && endDate) {
+                    startDatePicker.setDate(startDate);
+                    endDatePicker.setDate(endDate);
+                    
+                    // Update the hidden range field
+                    BulkDateAdmin.updateRangeField();
+                    
+                    // Visual feedback for selected preset
+                    $('.date-preset').removeClass('active');
+                    $(this).addClass('active');
+                }
             });
         },
 
@@ -140,7 +247,6 @@
 
         /**
          * Setup tabs functionality
-         * FIXED: Removed the problematic tab caching and auto-navigation
          */
         setupTabs: function() {
             // Handle tab click events without auto-navigation or caching
@@ -170,18 +276,14 @@
             });
             
             // Handle checkbox changes for tab toggling via AJAX
-            $('input[type="checkbox"][id^="tab_"]').on('change', function() {
-                const tabId = $(this).attr('id').replace('tab_', '');
-                const isChecked = $(this).is(':checked');
+            $('.bulkud-tab-toggle').on('change', function() {
+                const checkbox = $(this);
+                const tabId = checkbox.data('tab');
+                const isChecked = checkbox.is(':checked');
+                const tabToggleNonce = $('#settings-form-nonce input[name="tab_toggle_nonce"]').val();
                 
-                // Show loading feedback
-                $('#settings-response')
-                    .removeClass('hidden notice-success notice-error')
-                    .addClass('notice')
-                    .html('<p><span class="spinner is-active" style="float: none; margin: 0 5px 0 0;"></span> ' + bulkDateUpdate.strings.updatingSettings + '</p>')
-                    .show();
+                console.log('Sending AJAX request to toggle tab. TabID: ' + tabId + ', Enabled: ' + isChecked + ', Nonce: ' + tabToggleNonce);
                 
-                // Send AJAX request to update tab visibility
                 $.ajax({
                     url: bulkDateUpdate.ajaxUrl,
                     type: 'POST',
@@ -189,42 +291,23 @@
                         action: 'bulk_date_update_toggle_tab',
                         tab: tabId,
                         enabled: isChecked ? 1 : 0,
-                        nonce: bulkDateUpdate.nonce
+                        nonce: tabToggleNonce
                     },
                     success: function(response) {
+                        console.log('AJAX response:', response);
                         if (response.success) {
-                            $('#settings-response')
-                                .removeClass('notice-error')
-                                .addClass('notice-success')
-                                .html('<p>' + response.data.message + '</p>');
-                                
-                            // Update tab visibility in real-time
-                            if (isChecked) {
-                                if ($('#bulk-date-tabs a[data-tab="' + tabId + '"]').length === 0) {
-                                    location.reload(); // Reload if tab doesn't exist in DOM yet
-                                } else {
-                                    $('#bulk-date-tabs a[data-tab="' + tabId + '"]').removeClass('hidden');
-                                }
-                            } else {
-                                $('#bulk-date-tabs a[data-tab="' + tabId + '"]').addClass('hidden');
-                            }
+                            BulkDateAdmin.showNotice(response.data.message, 'success');
                         } else {
-                            $('#settings-response')
-                                .removeClass('notice-success')
-                                .addClass('notice-error')
-                                .html('<p>' + (response.data ? response.data.message : bulkDateUpdate.strings.errorUpdatingSettings) + '</p>');
+                            BulkDateAdmin.showNotice(response.data.message, 'error');
+                            // Revert checkbox to previous state
+                            checkbox.prop('checked', !isChecked);
                         }
-                        
-                        // Hide message after 3 seconds
-                        setTimeout(function() {
-                            $('#settings-response').fadeOut();
-                        }, 3000);
                     },
-                    error: function() {
-                        $('#settings-response')
-                            .removeClass('notice-success')
-                            .addClass('notice-error')
-                            .html('<p>' + bulkDateUpdate.strings.errorUpdatingSettings + '</p>');
+                    error: function(xhr, status, error) {
+                        console.error('AJAX error:', status, error, xhr.responseText);
+                        BulkDateAdmin.showNotice('Failed to update settings: ' + error, 'error');
+                        // Revert checkbox to previous state
+                        checkbox.prop('checked', !isChecked);
                     }
                 });
             });
@@ -266,7 +349,8 @@
          */
         setupFormValidation: function() {
             $('#bulk-update-form').on('submit', function(e) {
-                // Additional validation can be added here if needed
+                // Make sure the hidden range field is updated with current values
+                BulkDateAdmin.updateRangeField();
                 
                 // Show loading state during form submission
                 const $submitButton = $(this).find('input[type="submit"]');
@@ -275,6 +359,24 @@
                 
                 // Form will continue to submit normally
             });
+        },
+
+        /**
+         * Show notice to the user
+         */
+        showNotice: function(message, type) {
+            const $notice = $('#settings-response');
+            
+            // Remove existing classes and add appropriate ones
+            $notice.removeClass('hidden notice-success notice-error')
+                .addClass('notice notice-' + type)
+                .html('<p>' + message + '</p>')
+                .show();
+            
+            // Hide message after 3 seconds
+            setTimeout(function() {
+                $notice.fadeOut();
+            }, 3000);
         }
     };
 

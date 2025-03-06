@@ -118,16 +118,21 @@ $post_types = get_post_types($post_type_args, 'objects', 'and');
         
         <div id="settings-response" class="hidden"></div>
         
+        <!-- Settings page tab toggles -->
+        <div id="settings-form-nonce" style="display:none;">
+            <?php wp_nonce_field('bulk_date_update_toggle_tab', 'tab_toggle_nonce'); ?>
+        </div>
+        
         <table class="form-table">
             <tr>
                 <th scope="row"><?php _e('Built-in Content Types', 'bulk-post-update-date'); ?></th>
                 <td>
                     <label>
-                        <input type="checkbox" name="tab_posts" id="tab_posts" value="1" <?php checked(isset($enabled_tabs['posts']) && $enabled_tabs['posts']); ?>>
+                        <input type="checkbox" name="tab_posts" id="tab_posts" value="1" <?php checked(isset($enabled_tabs['posts']) && $enabled_tabs['posts']); ?> class="bulkud-tab-toggle" data-tab="posts">
                         <?php _e('Posts', 'bulk-post-update-date'); ?>
                     </label><br>
                     <label>
-                        <input type="checkbox" name="tab_pages" id="tab_pages" value="1" <?php checked(isset($enabled_tabs['pages']) && $enabled_tabs['pages']); ?>>
+                        <input type="checkbox" name="tab_pages" id="tab_pages" value="1" <?php checked(isset($enabled_tabs['pages']) && $enabled_tabs['pages']); ?> class="bulkud-tab-toggle" data-tab="pages">
                         <?php _e('Pages', 'bulk-post-update-date'); ?>
                     </label><br>
                     <label>
@@ -178,9 +183,34 @@ $post_types = get_post_types($post_type_args, 'objects', 'and');
                     </td>
                 </tr>
                 <tr id="range_row" valign="top" style="display: none;">
-                    <th scope="row"><label for="range"><?php _e('Custom Date Range', 'bulk-post-update-date'); ?></label></th>
+                    <th scope="row"><label for="date_range"><?php _e('Custom Date Range', 'bulk-post-update-date'); ?></label></th>
                     <td>
-                        <input type="text" id="range" name="range" value="<?php echo date('m/d/y', strtotime('-3 days', $now)); ?> - <?php echo date('m/d/y', $now); ?>" />
+                        <div class="date-range-container">
+                            <div class="date-inputs">
+                                <div class="date-input-wrapper">
+                                    <label for="start_date"><?php _e('Start Date:', 'bulk-post-update-date'); ?></label>
+                                    <input type="text" id="start_date" name="start_date" class="date-picker" placeholder="<?php _e('Select start date', 'bulk-post-update-date'); ?>" />
+                                </div>
+                                
+                                <div class="date-input-wrapper">
+                                    <label for="end_date"><?php _e('End Date:', 'bulk-post-update-date'); ?></label>
+                                    <input type="text" id="end_date" name="end_date" class="date-picker" placeholder="<?php _e('Select end date', 'bulk-post-update-date'); ?>" />
+                                </div>
+                            </div>
+                            
+                            <input type="hidden" id="range" name="range" value="<?php echo date('m/d/y', strtotime('-3 days', $now)); ?> - <?php echo date('m/d/y', $now); ?>" />
+                            
+                            <div class="date-presets">
+                                <span class="date-preset-label"><?php _e('Quick presets:', 'bulk-post-update-date'); ?></span>
+                                <button type="button" class="button date-preset" data-preset="today"><?php _e('Today', 'bulk-post-update-date'); ?></button>
+                                <button type="button" class="button date-preset" data-preset="yesterday"><?php _e('Yesterday', 'bulk-post-update-date'); ?></button>
+                                <button type="button" class="button date-preset" data-preset="last7Days"><?php _e('Last 7 Days', 'bulk-post-update-date'); ?></button>
+                                <button type="button" class="button date-preset" data-preset="last30Days"><?php _e('Last 30 Days', 'bulk-post-update-date'); ?></button>
+                                <button type="button" class="button date-preset" data-preset="thisMonth"><?php _e('This Month', 'bulk-post-update-date'); ?></button>
+                                <button type="button" class="button date-preset" data-preset="lastMonth"><?php _e('Last Month', 'bulk-post-update-date'); ?></button>
+                            </div>
+                        </div>
+                        
                         <p class="description">
                             <?php _e('Select range of date in which you want to spread the dates', 'bulk-post-update-date'); ?>
                         </p>

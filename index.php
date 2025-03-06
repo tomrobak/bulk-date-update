@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: Bulk Date Update
- * Version: 1.3.1
+ * Version: 1.4
  * Description: Change the Post Update date for all posts in one click. This will help your blog in search engines and your blog will look alive. Do this every week or month.
  * Author: wplove.co
  * Author URI: https://tomrobak.com
@@ -29,7 +29,7 @@
 */
 
 // Define plugin version constant
-define('BULK_DATE_UPDATE_VERSION', '1.3.1');
+define('BULK_DATE_UPDATE_VERSION', '1.4');
 
 /**
  * Add plugin menu item to WordPress admin
@@ -86,7 +86,12 @@ function bulk_post_update_date_toggle_tab(): void {
     // Verify nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'bulk_date_update_toggle_tab')) {
         wp_send_json_error([
-            'message' => __('Security check failed.', 'bulk-post-update-date')
+            'message' => __('Security check failed.', 'bulk-post-update-date'),
+            'debug' => [
+                'nonce_provided' => isset($_POST['nonce']) ? 'yes' : 'no',
+                'nonce_value' => isset($_POST['nonce']) ? substr($_POST['nonce'], 0, 5) . '...' : 'none',
+                'action' => 'bulk_date_update_toggle_tab'
+            ]
         ]);
         return;
     }
@@ -100,8 +105,8 @@ function bulk_post_update_date_toggle_tab(): void {
     }
     
     // Get tab and enabled status
-    $tab = sanitize_key($_POST['tab']);
-    $enabled = (bool) $_POST['enabled'];
+    $tab = isset($_POST['tab']) ? sanitize_key($_POST['tab']) : '';
+    $enabled = isset($_POST['enabled']) ? (bool) $_POST['enabled'] : false;
     
     if (empty($tab)) {
         wp_send_json_error([
@@ -120,7 +125,7 @@ function bulk_post_update_date_toggle_tab(): void {
     $enabled_tabs[$tab] = $enabled;
     
     // Save updated settings
-    update_option('bulk_date_update_tabs', $enabled_tabs);
+    $update_result = update_option('bulk_date_update_tabs', $enabled_tabs);
     
     // Send success response
     wp_send_json_success([
@@ -131,7 +136,9 @@ function bulk_post_update_date_toggle_tab(): void {
             ucfirst($tab)
         ),
         'tab' => $tab,
-        'enabled' => $enabled
+        'enabled' => $enabled,
+        'update_result' => $update_result,
+        'new_settings' => $enabled_tabs
     ]);
 }
 
@@ -147,28 +154,42 @@ function bulk_post_update_date_admin_enqueue_scripts(string $hook): void {
         return;
     }
     
-    // Enqueue scripts with proper dependency management and versioning
-    wp_enqueue_script('momentjs', 'https://cdn.jsdelivr.net/momentjs/latest/moment.min.js', [], '2.29.4', true);
-    wp_enqueue_script('daterangepicker', 'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js', ['jquery', 'momentjs'], '3.1.0', true);
-    wp_enqueue_style('daterangepicker', 'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css', [], '3.1.0');
-    
-    // Add flatpickr for modern time picker
+    // Add flatpickr for modern date and time picker
     wp_enqueue_script('flatpickr', 'https://cdn.jsdelivr.net/npm/flatpickr', ['jquery'], '4.6.13', true);
     wp_enqueue_style('flatpickr', 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css', [], '4.6.13');
     
+    // Add flatpickr range plugin for date range
+    wp_enqueue_script('flatpickr-range', 'https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js', ['flatpickr'], '4.6.13', true);
+    
     // Plugin specific styles and scripts
     wp_enqueue_style('bulkupdatedate', plugins_url('/style.css', __FILE__), [], BULK_DATE_UPDATE_VERSION);
-    wp_register_script('bulkupdatedate-admin', plugins_url('/js/admin.js', __FILE__), ['jquery', 'flatpickr', 'wp-util'], BULK_DATE_UPDATE_VERSION, true);
+    wp_register_script('bulkupdatedate-admin', plugins_url('/js/admin.js', __FILE__), ['jquery', 'flatpickr', 'flatpickr-range', 'wp-util'], BULK_DATE_UPDATE_VERSION, true);
     
     // Localize script with settings and translatable strings
     wp_localize_script('bulkupdatedate-admin', 'bulkDateUpdate', [
         'ajaxUrl' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('bulk_date_update_nonce'),
+        'nonce' => wp_create_nonce('bulk_date_update_toggle_tab'),
         'currentTab' => isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'settings',
         'strings' => [
             'invalidTimeRange' => __('Start time cannot be later than end time.', 'bulk-post-update-date'),
             'updatingSettings' => __('Updating settings...', 'bulk-post-update-date'),
-            'errorUpdatingSettings' => __('Error updating settings. Please try again.', 'bulk-post-update-date')
+            'errorUpdatingSettings' => __('Error updating settings. Please try again.', 'bulk-post-update-date'),
+            'today' => __('Today', 'bulk-post-update-date'),
+            'yesterday' => __('Yesterday', 'bulk-post-update-date'),
+            'last7Days' => __('Last 7 Days', 'bulk-post-update-date'),
+            'last30Days' => __('Last 30 Days', 'bulk-post-update-date'),
+            'thisMonth' => __('This Month', 'bulk-post-update-date'),
+            'lastMonth' => __('Last Month', 'bulk-post-update-date'),
+            'custom' => __('Custom', 'bulk-post-update-date')
+        ],
+        'dates' => [
+            'today' => date('Y-m-d'),
+            'yesterday' => date('Y-m-d', strtotime('-1 day')),
+            'last7Start' => date('Y-m-d', strtotime('-7 days')),
+            'last30Start' => date('Y-m-d', strtotime('-30 days')),
+            'thisMonthStart' => date('Y-m-01'),
+            'lastMonthStart' => date('Y-m-01', strtotime('first day of last month')),
+            'lastMonthEnd' => date('Y-m-t', strtotime('last day of last month'))
         ]
     ]);
     
