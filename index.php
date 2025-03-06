@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: Bulk Date Update
- * Version: 1.0
+ * Version: 1.1
  * Description: Change the Post Update date for all posts in one click. This will help your blog in search engines and your blog will look alive. Do this every week or month.
  * Author: wplove.co
  * Author URI: https://tomrobak.com
@@ -27,6 +27,9 @@
     You should have received a copy of the GNU General Public License
     along with Bulk Date Update. If not, see {URI to Plugin License}.
 */
+
+// Define plugin version constant
+define('BULK_DATE_UPDATE_VERSION', '1.1');
 
 /**
  * Add plugin menu item to WordPress admin
@@ -62,6 +65,148 @@ function bulk_post_update_date_load_textdomain(): void {
 add_action('plugins_loaded', 'bulk_post_update_date_load_textdomain');
 
 /**
+ * Register Ajax handlers for tab toggling functionality
+ * 
+ * @since 1.1
+ * @return void
+ */
+function bulk_post_update_date_ajax_handlers(): void {
+    add_action('wp_ajax_bulk_date_update_toggle_tab', 'bulk_post_update_date_toggle_tab');
+}
+
+add_action('admin_init', 'bulk_post_update_date_ajax_handlers');
+
+/**
+ * Ajax handler for enabling/disabling tabs
+ * 
+ * @since 1.1
+ * @return void
+ */
+function bulk_post_update_date_toggle_tab(): void {
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'bulk_date_update_toggle_tab')) {
+        wp_send_json_error([
+            'message' => __('Security check failed.', 'bulk-post-update-date')
+        ]);
+        return;
+    }
+    
+    // Check user permissions
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error([
+            'message' => __('You do not have permission to update settings.', 'bulk-post-update-date')
+        ]);
+        return;
+    }
+    
+    // Get tab and enabled status
+    $tab = sanitize_key($_POST['tab']);
+    $enabled = (bool) $_POST['enabled'];
+    
+    if (empty($tab)) {
+        wp_send_json_error([
+            'message' => __('Invalid tab specified.', 'bulk-post-update-date')
+        ]);
+        return;
+    }
+    
+    // Get current settings
+    $enabled_tabs = get_option('bulk_date_update_tabs', [
+        'posts' => true,
+        'pages' => true
+    ]);
+    
+    // Update settings
+    $enabled_tabs[$tab] = $enabled;
+    
+    // Save updated settings
+    update_option('bulk_date_update_tabs', $enabled_tabs);
+    
+    // Send success response
+    wp_send_json_success([
+        'message' => sprintf(
+            $enabled 
+                ? __('The %s tab has been enabled.', 'bulk-post-update-date') 
+                : __('The %s tab has been disabled.', 'bulk-post-update-date'), 
+            ucfirst($tab)
+        ),
+        'tab' => $tab,
+        'enabled' => $enabled
+    ]);
+}
+
+/**
+ * Enqueue admin scripts and styles
+ *
+ * @since 1.1
+ * @param string $hook Current admin page hook
+ * @return void
+ */
+function bulk_post_update_date_admin_enqueue_scripts(string $hook): void {
+    if ($hook !== 'toplevel_page_bulk-post-update-date') {
+        return;
+    }
+    
+    // Enqueue scripts with proper dependency management and versioning
+    wp_enqueue_script('momentjs', 'https://cdn.jsdelivr.net/momentjs/latest/moment.min.js', [], '2.29.4', true);
+    wp_enqueue_script('daterangepicker', 'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js', ['jquery', 'momentjs'], '3.1.0', true);
+    wp_enqueue_style('daterangepicker', 'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css', [], '3.1.0');
+    wp_enqueue_style('bulkupdatedate', plugins_url('/style.css', __FILE__), [], BULK_DATE_UPDATE_VERSION);
+    
+    // Add inline script to improve tab switching performance
+    wp_add_inline_script('jquery', '
+        // Pre-fetch tab content
+        jQuery(document).ready(function($) {
+            var tabCache = {};
+            
+            // Intercept tab clicks to store tab selection
+            $(".nav-tab-wrapper a").on("click", function(e) {
+                // Store the clicked tab in sessionStorage
+                sessionStorage.setItem("bulkDateUpdateActiveTab", $(this).attr("href"));
+            });
+            
+            // Check if there is a saved tab
+            var activeTab = sessionStorage.getItem("bulkDateUpdateActiveTab");
+            if (activeTab) {
+                // If the current URL does not match the saved tab, do not restore
+                var currentTab = window.location.href.split("tab=")[1];
+                if (currentTab && activeTab.indexOf(currentTab) !== -1) {
+                    // Tab is already correctly set
+                } else if (!currentTab && activeTab.indexOf("tab=settings") !== -1) {
+                    // We are on the main page and settings was selected
+                } else {
+                    // Restore the saved tab
+                    window.location.href = activeTab;
+                }
+            }
+        });
+    ');
+}
+
+add_action('admin_enqueue_scripts', 'bulk_post_update_date_admin_enqueue_scripts');
+
+/**
+ * Plugin activation hook to set default tab settings
+ *
+ * @since 1.1
+ * @return void
+ */
+function bulk_post_update_date_activate(): void {
+    // Set default tab settings if not already set
+    if (!get_option('bulk_date_update_tabs')) {
+        $default_tabs = [
+            'posts' => true,
+            'pages' => true,
+            'comments' => false
+        ];
+        
+        update_option('bulk_date_update_tabs', $default_tabs);
+    }
+}
+
+register_activation_hook(__FILE__, 'bulk_post_update_date_activate');
+
+/**
  * Plugin options page
  * 
  * @since 1.0
@@ -78,17 +223,15 @@ function bulk_post_update_date_options(): void {
     $settings_saved = 0;
     
     // Get the current tab
-    $tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'posts';
+    $tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'settings';
     $type = $tab;
 
-    // Extra Check for url bug
-    $tab = (in_array($tab, ['pages', 'posts'])) ? $tab : 'custom';
-
-    $now = current_time('timestamp', 0);
-
-    if (isset($_GET['tab']) && $_GET['tab'] === 'comments') {
-        $type = $tab = 'comments';
+    // Default to settings tab
+    if (!in_array($tab, ['settings', 'posts', 'pages', 'comments']) && !post_type_exists($tab)) {
+        $tab = 'settings';
     }
+    
+    $now = current_time('timestamp', 0);
 
     // Handle form submission
     if (isset($_POST['tb_refresh']) && wp_verify_nonce($_POST['tb_refresh'], 'tb-refresh') && current_user_can('manage_options')) {
@@ -97,7 +240,7 @@ function bulk_post_update_date_options(): void {
             if ($tab === 'comments') {
                 include_once 'inc.php';
                 $settings_saved = handleComments();
-            } else {
+            } else if ($tab !== 'settings') {
                 // Process post types (posts, pages, custom post types)
                 $settings_saved = processPostTypeUpdate($type);
             }
@@ -112,12 +255,6 @@ function bulk_post_update_date_options(): void {
             );
         }
     }
-
-    // Enqueue necessary scripts and styles
-    wp_enqueue_script('momentjs', 'https://cdn.jsdelivr.net/momentjs/latest/moment.min.js', [], '2.29.4', true);
-    wp_enqueue_script('daterangepicker', 'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js', ['jquery', 'momentjs'], '3.1.0', true);
-    wp_enqueue_style('daterangepicker', 'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css', [], '3.1.0');
-    wp_enqueue_style('bulkupdatedate', plugins_url('/style.css', __FILE__), [], '1.0.0');
     
     // Display the settings form
     include_once 'templates/settings-page.php';

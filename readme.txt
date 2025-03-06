@@ -5,7 +5,7 @@ Donate link: https://wplove.co
 Requires at least: 5.0
 Tested up to: 6.7.2
 Requires PHP: 8.0
-Stable tag: 1.0
+Stable tag: 1.1
 License: GPL2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,10 +34,12 @@ Search engines like Google prioritize fresh content in their rankings. When your
 * Option to update published date, modified date, or both
 * Dedicated admin menu for quick access
 * Optimized performance for sites with thousands of posts
+* NEW: Customizable admin interface with selectable tabs
+* NEW: Faster tab switching for better performance
+* NEW: More date range options (3 days, 7 days)
 
 #### Support
-* Community support via [wplove.co](https://wplove.co)
-* Premium support available for customization
+* Community support via [wplove.co](https://wplove.co/community/space/plugins-themes/home)
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/bulk-date-update` directory, or install directly through the WordPress plugins screen
@@ -64,6 +66,9 @@ For optimal SEO benefits without appearing manipulative, we recommend updating p
 = Will search engines penalize me for using this? =
 When used responsibly (not daily), search engines typically won't penalize date updates. However, it's always recommended to follow this practice in moderation and in combination with actual content updates.
 
+= Can I customize which tabs appear in the interface? =
+Yes! In version 1.1, we've added a Settings tab that allows you to choose which tabs appear in the interface. This helps streamline your workflow by showing only the content types you need.
+
 = Is the plugin compatible with WordPress multisite? =
 Yes, the plugin works on multisite installations, but must be activated on each site individually.
 
@@ -75,8 +80,24 @@ Yes, the plugin updates WordPress core date fields that are independent of page 
 2. Pages date update screen
 3. Custom post type date update screen
 4. Comment date update screen
+5. Settings tab for customizing visible tabs
 
 == Changelog ==
+
+= 1.1 =
+* Added new Settings tab as the first tab for easy configuration
+* Implemented AJAX-based tab management for toggling tab visibility without page reload
+* Added 3 days and 7 days options to the date distribution dropdown
+* Improved tab switching performance for smoother user experience
+* Enhanced user interface with smoother transitions
+* Updated resource section with WordPress for Photographers community
+* Added Posts Remastered resource for improving SEO
+* Added link to wplove.co blog for additional tutorials
+* Added Plugin Support button for easier access to support
+* Improved UI with better icon alignment and spacing
+* Added activation hook to set default tab settings
+* Updated all community links and removed outdated information
+* Improved mobile responsiveness for better experience on smaller screens
 
 = 1.0 =
 * Complete plugin rebranding and code modernization
@@ -100,5 +121,8 @@ Yes, the plugin updates WordPress core date fields that are independent of page 
 * Added responsive design improvements for mobile admin
 
 == Upgrade Notice ==
+= 1.1 =
+Adds customizable tabs for easier workflow, faster performance, additional date range options, and improved resource links.
+
 = 1.0 =
 Major update with improved performance, security enhancements, modern UI, and compatibility with latest WordPress and PHP versions.
