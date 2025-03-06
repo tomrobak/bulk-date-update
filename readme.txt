@@ -5,7 +5,7 @@ Donate link: https://wplove.co
 Requires at least: 6.7
 Tested up to: 6.7.2
 Requires PHP: 8.0
-Stable tag: 1.4
+Stable tag: 1.4.1
 License: GPL2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -89,6 +89,11 @@ Yes, the plugin updates WordPress core date fields that are independent of page 
 7. Time range selection interface
 
 == Changelog ==
+
+= 1.4.1 =
+* Fixed JavaScript error "setupToggleTabs is not a function" that was breaking tab functionality
+* Improved initialization process for better stability
+* Removed redundant function calls for improved performance
 
 = 1.4 =
 * Completely redesigned date range picker with modern UI

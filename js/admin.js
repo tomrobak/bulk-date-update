@@ -4,7 +4,7 @@
  * Handles all the admin interactions including modern date/time pickers
  * and performance optimizations.
  * 
- * @since 1.4
+ * @since 1.4.1
  */
 
 (function($) {
@@ -22,7 +22,6 @@
             this.setupTimeRangeToggle();
             this.setupDateRangePresets();
             this.setupTabs();
-            this.setupToggleTabs();
             this.setupFormValidation();
         },
 
