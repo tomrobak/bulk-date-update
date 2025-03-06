@@ -356,220 +356,177 @@
     color: #fff;
 }
 
-/* Date range container */
+/* Enhanced date range container */
 .date-range-container {
-    margin-top: 5px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    max-width: 650px;
 }
 
+/* Date inputs container - with appropriate 24px spacing */
 .date-inputs {
     display: flex;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    margin-bottom: 15px;
-    gap: 20px;
+    flex-wrap: nowrap;
+    gap: 24px;
+    margin-bottom: 20px;
+    align-items: flex-end;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border: 1px solid #e5e5e5;
+    padding: 16px;
 }
 
 .date-input-wrapper {
-    display: flex;
-    flex-direction: column;
+    flex: 1;
+    min-width: 160px;
+    position: relative;
 }
 
 .date-input-wrapper label {
+    display: block;
     margin-bottom: 8px;
-    font-weight: 500;
+    font-weight: 600;
+    color: #23282d;
 }
 
+/* Presets styling */
 .date-presets {
-    margin-top: 15px;
     display: flex;
-    align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 8px;
+    margin: 15px 0;
+    padding: 12px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border: 1px solid #e5e5e5;
 }
 
 .date-preset-label {
-    font-weight: 500;
-    margin-right: 5px;
-}
-
-.date-preset {
-    background-color: #fff;
-    border: 1px solid #dee2e6;
-    padding: 5px 10px;
-    border-radius: var(--border-radius);
-    font-size: 0.85rem;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.date-preset:hover {
-    background-color: #e9ecef;
-}
-
-.date-preset.active {
-    background-color: var(--primary-color);
-    color: #fff;
-    border-color: var(--primary-color);
+    flex: 0 0 100%;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #23282d;
 }
 
 /* Time range controls */
 .time-range-toggle {
-    margin-top: 15px;
-    background-color: #f8f9fa;
-    padding: 10px 15px;
-    border-radius: var(--border-radius);
-    border: 1px solid #e9ecef;
-    display: inline-block;
-    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    margin: 20px 0 10px;
+    padding: 12px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border: 1px solid #e5e5e5;
 }
 
 .time-range-toggle:hover {
-    background-color: #e9ecef;
+    background: #f6f7f7;
 }
 
 .time-range-toggle label {
+    margin-left: 8px;
     font-weight: 600;
-    display: flex;
-    align-items: center;
+    color: #23282d;
     cursor: pointer;
 }
 
 .time-range-controls {
-    margin-top: 15px;
-    padding: 20px;
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
+    display: none;
+    margin-top: 10px;
+    padding: 12px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border: 1px solid #e5e5e5;
 }
 
 .time-range-row {
     display: flex;
-    align-items: flex-start;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    gap: 24px;
     margin-bottom: 15px;
-    gap: 20px;
+    align-items: flex-end;
 }
 
 .time-input-wrapper {
-    display: flex;
-    flex-direction: column;
+    flex: 1;
+    min-width: 160px;
 }
 
 .time-input-wrapper label {
-    margin-bottom: 8px;
-    font-weight: 500;
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #23282d;
 }
 
+/* Time presets */
 .time-presets {
-    margin-top: 15px;
     display: flex;
-    align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e5e5e5;
 }
 
 .time-preset-label {
-    font-weight: 500;
-    margin-right: 5px;
-}
-
-.time-preset {
-    background-color: #fff;
-    border: 1px solid #dee2e6;
-    padding: 5px 10px;
-    border-radius: var(--border-radius);
-    font-size: 0.85rem;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.time-preset:hover {
-    background-color: #e9ecef;
-}
-
-.time-preset.active {
-    background-color: var(--primary-color);
-    color: #fff;
-    border-color: var(--primary-color);
-}
-
-/* Flatpickr customizations */
-.flatpickr-calendar {
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    width: auto;
-}
-
-.flatpickr-calendar.rangeMode {
-    width: auto;
-}
-
-.flatpickr-time {
-    border-radius: 0 0 var(--border-radius) var(--border-radius);
-}
-
-.flatpickr-hour, .flatpickr-minute {
-    font-weight: bold;
-}
-
-.flatpickr-months .flatpickr-month {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.flatpickr-current-month .flatpickr-monthDropdown-months,
-.flatpickr-current-month input.cur-year {
-    color: white;
+    flex: 0 0 100%;
+    margin-bottom: 5px;
     font-weight: 600;
+    color: #23282d;
 }
 
-.flatpickr-weekday {
-    background-color: var(--primary-color);
-    color: rgba(255, 255, 255, 0.8);
-    font-weight: 500;
+/* Common preset button styling */
+.date-preset, .time-preset {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #50575e;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    text-decoration: none;
+    box-shadow: 0 1px 0 #dcdcde;
 }
 
-.flatpickr-day.selected, 
-.flatpickr-day.startRange, 
-.flatpickr-day.endRange, 
-.flatpickr-day.selected.inRange, 
-.flatpickr-day.startRange.inRange, 
-.flatpickr-day.endRange.inRange, 
-.flatpickr-day.selected:focus, 
-.flatpickr-day.startRange:focus, 
-.flatpickr-day.endRange:focus, 
-.flatpickr-day.selected:hover, 
-.flatpickr-day.startRange:hover, 
-.flatpickr-day.endRange:hover, 
-.flatpickr-day.selected.prevMonthDay, 
-.flatpickr-day.startRange.prevMonthDay, 
-.flatpickr-day.endRange.prevMonthDay, 
-.flatpickr-day.selected.nextMonthDay, 
-.flatpickr-day.startRange.nextMonthDay, 
-.flatpickr-day.endRange.nextMonthDay {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
+.date-preset:hover, .time-preset:hover {
+    background: #f6f7f7;
+    border-color: #c3c4c7;
+    color: #135e96;
 }
 
-.flatpickr-day.inRange, 
-.flatpickr-day.prevMonthDay.inRange, 
-.flatpickr-day.nextMonthDay.inRange, 
-.flatpickr-day.today.inRange, 
-.flatpickr-day.prevMonthDay.today.inRange, 
-.flatpickr-day.nextMonthDay.today.inRange, 
-.flatpickr-day:hover, 
-.flatpickr-day.prevMonthDay:hover, 
-.flatpickr-day.nextMonthDay:hover, 
-.flatpickr-day:focus, 
-.flatpickr-day.prevMonthDay:focus, 
-.flatpickr-day.nextMonthDay:focus {
-    background: #e6f2ff;
-    border-color: #e6f2ff;
+.date-preset.active, .time-preset.active {
+    background-color: #2271b1;
+    border-color: #2271b1;
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 1px 0 #2271b1;
+}
+
+/* Compact row layouts for better field positioning */
+.row-label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.compact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    align-items: flex-end;
+    margin-bottom: 15px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border: 1px solid #e5e5e5;
+    padding: 16px;
+}
+
+.compact-row > * {
+    flex: 1;
+    min-width: 160px;
 }
 
 /* Tab loader */
@@ -592,43 +549,23 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
-    .resource-cards {
+@media (max-width: 782px) {
+    .date-inputs,
+    .time-range-row,
+    .compact-row {
         flex-direction: column;
+        gap: 12px;
     }
     
-    .coffee-box, .top-sharebar {
-        position: relative;
-        padding: 15px;
-    }
-    
-    .top-sharebar {
-        top: 0;
-        right: 0;
-        margin-bottom: 20px;
-        justify-content: flex-start;
-        flex-direction: row;
-        flex-wrap: wrap;
-    }
-    
-    .top-sharebar > * {
-        margin-left: 0;
-        margin-right: 10px;
-        margin-bottom: 10px;
-    }
-    
-    .form-table input[type=text], 
-    .form-table select {
-        min-width: 100%;
+    .date-input-wrapper,
+    .time-input-wrapper,
+    .compact-row > * {
         width: 100%;
+        min-width: 100%;
     }
     
-    .nav-tab-wrapper {
-        display: flex;
-        flex-wrap: wrap;
-    }
-    
-    .nav-tab {
-        margin-bottom: 5px;
+    .date-presets,
+    .time-presets {
+        justify-content: flex-start;
     }
 }

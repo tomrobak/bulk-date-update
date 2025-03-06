@@ -1,17 +1,8 @@
 # Bulk Date Update
 
-![Bulk Date Update Banner](assets/banner-772x250.jpg)
-
-> Change the post update date for all posts and pages in one click to improve SEO and keep your blog looking fresh and active.
-
-[![WordPress Plugin Version](https://img.shields.io/wordpress/plugin/v/bulk-post-update-date)](https://wordpress.org/plugins/bulk-post-update-date/)
-[![WordPress Plugin Rating](https://img.shields.io/wordpress/plugin/rating/bulk-post-update-date)](https://wordpress.org/plugins/bulk-post-update-date/reviews/)
-[![WordPress Required Version](https://img.shields.io/wordpress/plugin/wp-version/bulk-post-update-date)](https://wordpress.org/plugins/bulk-post-update-date/)
-[![WordPress Plugin Downloads](https://img.shields.io/wordpress/plugin/dt/bulk-post-update-date)](https://wordpress.org/plugins/bulk-post-update-date/)
+Bulk Date Update allows you to quickly update the dates of your WordPress content, including posts, pages, custom post types, and comments. This optimization helps search engines recognize your content as fresh and relevant, potentially improving your search rankings.
 
 ## Description
-
-Bulk Date Update allows you to quickly update the dates of your WordPress content, including posts, pages, custom post types, and comments. This optimization helps search engines recognize your content as fresh and relevant, potentially improving your search rankings.
 
 ### How It Works
 
@@ -94,17 +85,46 @@ Yes, the plugin works on multisite installations, but must be activated on each 
 
 Yes, the plugin updates WordPress core date fields that are independent of page builders.
 
-## Screenshots
-
-1. Posts date update screen with category filtering
-2. Pages date update screen
-3. Custom post type date update screen
-4. Comment date update screen
-5. Settings tab for customizing visible tabs
-6. Modern date picker with presets
-7. Time range selection interface
-
 ## Changelog
+
+### 1.4.7
+- Fixed critical date format errors that caused "Invalid date provided" errors
+- Improved date conversion handling with robust error prevention
+- Optimized start and end field spacing to exactly 24px for better alignment
+- Improved field container padding and spacing for better UI
+- Enhanced error handling with detailed console logging
+- Added date format validation and automatic format conversion
+- Added fallback to default dates when existing dates can't be parsed
+- Removed readme.txt in favor of unified GitHub-compatible readme.md
+- Removed WordPress.org repository references as plugin is not hosted there
+
+### 1.4.6
+- Fixed date format issues in quick presets that caused incorrect dates
+- Resolved spacing problems between start and end date/time fields
+- Added consistent background styling for date and time range sections
+- Standardized date format to ISO format (YYYY-MM-DD) for better compatibility
+- Improved date validation to prevent incorrect date parsing
+- Enhanced error handling and logging for date selection
+- Optimized preset buttons styling and margins
+- Added debug information to help troubleshoot date selection issues
+
+### 1.4.5
+- Fixed spacing issues between date and time range fields
+- Improved layout of start and end input fields by positioning them closer together
+- Enhanced responsive behavior for date and time controls on mobile devices
+- Added compact row layouts for better field alignment
+- Reduced unnecessary gaps in the UI for a more polished appearance
+- Streamlined CSS for more consistent spacing throughout the interface
+
+### 1.4.4
+- Completely redesigned date range calendar to match plugin's style
+- Enhanced calendar UI with WordPress admin color scheme integration
+- Improved date picker usability and overall user experience
+- Refined calendar input fields with better styling and visual cues
+- Added improved hover and active states for date selections
+- Updated calendar navigation for more intuitive month switching
+- Improved date range display to better match time range controls
+- Unified CSS styling between date and time pickers for consistency
 
 ### 1.4.3
 - Fixed issue where tabs wouldn't appear immediately after enabling them

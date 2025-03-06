@@ -4,7 +4,7 @@
  * Handles all the admin interactions including modern date/time pickers
  * and performance optimizations.
  * 
- * @since 1.4.3
+ * @since 1.4.7
  */
 
 (function($) {
@@ -30,10 +30,39 @@
          */
         setupDatePickers: function() {
             if ($('#start_date').length && $('#end_date').length) {
+                // Common configuration for date pickers
+                const datePickerConfig = {
+                    dateFormat: 'Y-m-d', // ISO format to match PHP
+                    maxDate: 'today',
+                    showMonths: 1,
+                    animate: true,
+                    static: false,
+                    closeOnSelect: true,
+                    disableMobile: false,
+                    locale: {
+                        firstDayOfWeek: 1, // Monday
+                        weekdays: {
+                            shorthand: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
+                            longhand: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+                        },
+                        months: {
+                            shorthand: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                            longhand: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+                        }
+                    },
+                    onMonthChange: function() {
+                        // Ensure the calendar redraws properly
+                        setTimeout(function() {
+                            if (typeof window.dispatchEvent === 'function') {
+                                window.dispatchEvent(new Event('resize'));
+                            }
+                        }, 100);
+                    }
+                };
+                
                 // Start date picker
                 const startDatePicker = flatpickr('#start_date', {
-                    dateFormat: 'm/d/y',
-                    maxDate: 'today',
+                    ...datePickerConfig,
                     onClose: function(selectedDates, dateStr) {
                         // Update the end date min when start date changes
                         if (selectedDates[0]) {
@@ -47,8 +76,7 @@
                 
                 // End date picker
                 const endDatePicker = flatpickr('#end_date', {
-                    dateFormat: 'm/d/y',
-                    maxDate: 'today',
+                    ...datePickerConfig,
                     onClose: function(selectedDates, dateStr) {
                         // Update the start date max when end date changes
                         if (selectedDates[0]) {
@@ -61,22 +89,95 @@
                 });
                 
                 // Set initial dates from the range field
-                const rangeParts = $('#range').val().split(' - ');
-                if (rangeParts.length === 2) {
-                    startDatePicker.setDate(rangeParts[0]);
-                    endDatePicker.setDate(rangeParts[1]);
-                } else {
-                    // Set default values: 3 days ago to today
-                    const today = new Date();
-                    const threeDaysAgo = new Date();
-                    threeDaysAgo.setDate(today.getDate() - 3);
-                    
-                    startDatePicker.setDate(threeDaysAgo);
-                    endDatePicker.setDate(today);
-                    
-                    // Update the hidden range field
-                    BulkDateAdmin.updateRangeField();
+                try {
+                    const rangeField = $('#range').val();
+                    if (rangeField && rangeField.includes(' - ')) {
+                        const rangeParts = rangeField.split(' - ');
+                        
+                        if (rangeParts.length === 2) {
+                            // Try to convert dates to ISO format if they're not already
+                            let startDate = this.convertToISODate(rangeParts[0]);
+                            let endDate = this.convertToISODate(rangeParts[1]);
+                            
+                            console.log('Converting date range:', rangeParts[0], '->', startDate, rangeParts[1], '->', endDate);
+                            
+                            // Only set if we got valid dates
+                            if (startDate && endDate) {
+                                startDatePicker.setDate(startDate);
+                                endDatePicker.setDate(endDate);
+                            } else {
+                                this.setDefaultDateRange(startDatePicker, endDatePicker);
+                            }
+                        } else {
+                            this.setDefaultDateRange(startDatePicker, endDatePicker);
+                        }
+                    } else {
+                        this.setDefaultDateRange(startDatePicker, endDatePicker);
+                    }
+                } catch (error) {
+                    console.error('Error setting initial dates:', error);
+                    this.setDefaultDateRange(startDatePicker, endDatePicker);
                 }
+            }
+        },
+        
+        /**
+         * Set default date range (3 days ago to today)
+         */
+        setDefaultDateRange: function(startDatePicker, endDatePicker) {
+            console.log('Setting default date range');
+            const today = new Date();
+            const threeDaysAgo = new Date();
+            threeDaysAgo.setDate(today.getDate() - 3);
+            
+            startDatePicker.setDate(threeDaysAgo);
+            endDatePicker.setDate(today);
+            
+            // Update the hidden range field
+            this.updateRangeField();
+        },
+        
+        /**
+         * Attempt to convert a date string to ISO format (YYYY-MM-DD)
+         */
+        convertToISODate: function(dateStr) {
+            try {
+                // Check if it's already in ISO format
+                if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                    return dateStr;
+                }
+                
+                // Try to parse MM/DD/YY format
+                const parts = dateStr.split('/');
+                if (parts.length === 3) {
+                    const month = parseInt(parts[0], 10);
+                    const day = parseInt(parts[1], 10);
+                    let year = parseInt(parts[2], 10);
+                    
+                    // Fix two-digit year
+                    if (year < 100) {
+                        year += year < 50 ? 2000 : 1900;
+                    }
+                    
+                    // Validate parts
+                    if (month < 1 || month > 12 || day < 1 || day > 31) {
+                        return null;
+                    }
+                    
+                    // Format as ISO
+                    return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                }
+                
+                // If all else fails, try native Date parsing as a last resort
+                const date = new Date(dateStr);
+                if (!isNaN(date.getTime())) {
+                    return date.toISOString().split('T')[0];
+                }
+                
+                return null;
+            } catch (e) {
+                console.error('Error converting date:', e);
+                return null;
             }
         },
 
@@ -88,7 +189,10 @@
             const endDate = $('#end_date').val();
             
             if (startDate && endDate) {
+                // Format consistently in ISO format
                 $('#range').val(startDate + ' - ' + endDate);
+                
+                console.log('Range field updated with date range:', startDate + ' - ' + endDate);
             }
         },
 
@@ -98,39 +202,58 @@
         setupDateRangePresets: function() {
             $('.date-preset').on('click', function() {
                 const preset = $(this).data('preset');
-                let startDate, endDate;
                 
+                // Get the Flatpickr instances
                 const startDatePicker = $('#start_date')[0]._flatpickr;
                 const endDatePicker = $('#end_date')[0]._flatpickr;
                 
-                switch(preset) {
-                    case 'today':
-                        startDate = bulkDateUpdate.dates.today;
-                        endDate = bulkDateUpdate.dates.today;
-                        break;
-                    case 'yesterday':
-                        startDate = bulkDateUpdate.dates.yesterday;
-                        endDate = bulkDateUpdate.dates.yesterday;
-                        break;
-                    case 'last7Days':
-                        startDate = bulkDateUpdate.dates.last7Start;
-                        endDate = bulkDateUpdate.dates.today;
-                        break;
-                    case 'last30Days':
-                        startDate = bulkDateUpdate.dates.last30Start;
-                        endDate = bulkDateUpdate.dates.today;
-                        break;
-                    case 'thisMonth':
-                        startDate = bulkDateUpdate.dates.thisMonthStart;
-                        endDate = bulkDateUpdate.dates.today;
-                        break;
-                    case 'lastMonth':
-                        startDate = bulkDateUpdate.dates.lastMonthStart;
-                        endDate = bulkDateUpdate.dates.lastMonthEnd;
-                        break;
+                // Make sure the date pickers exist
+                if (!startDatePicker || !endDatePicker) {
+                    console.error('Date pickers not initialized');
+                    return;
                 }
                 
-                if (startDate && endDate) {
+                // Parse dates from the global object safely
+                let startDate, endDate;
+                
+                try {
+                    switch(preset) {
+                        case 'today':
+                            startDate = new Date(bulkDateUpdate.dates.today);
+                            endDate = new Date(bulkDateUpdate.dates.today);
+                            break;
+                        case 'yesterday':
+                            startDate = new Date(bulkDateUpdate.dates.yesterday);
+                            endDate = new Date(bulkDateUpdate.dates.yesterday);
+                            break;
+                        case 'last7Days':
+                            startDate = new Date(bulkDateUpdate.dates.last7Start);
+                            endDate = new Date(bulkDateUpdate.dates.today);
+                            break;
+                        case 'last30Days':
+                            startDate = new Date(bulkDateUpdate.dates.last30Start);
+                            endDate = new Date(bulkDateUpdate.dates.today);
+                            break;
+                        case 'thisMonth':
+                            startDate = new Date(bulkDateUpdate.dates.thisMonthStart);
+                            endDate = new Date(bulkDateUpdate.dates.today);
+                            break;
+                        case 'lastMonth':
+                            startDate = new Date(bulkDateUpdate.dates.lastMonthStart);
+                            endDate = new Date(bulkDateUpdate.dates.lastMonthEnd);
+                            break;
+                        default:
+                            console.error('Unknown preset:', preset);
+                            return;
+                    }
+                    
+                    // Validate the dates
+                    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+                        console.error('Invalid date format from server:', startDate, endDate);
+                        return;
+                    }
+                    
+                    // Set the dates in the date pickers
                     startDatePicker.setDate(startDate);
                     endDatePicker.setDate(endDate);
                     
@@ -140,6 +263,11 @@
                     // Visual feedback for selected preset
                     $('.date-preset').removeClass('active');
                     $(this).addClass('active');
+                    
+                    console.log('Date preset applied:', preset, 'Start:', startDate, 'End:', endDate);
+                    
+                } catch (e) {
+                    console.error('Error applying date preset:', e);
                 }
             });
         },
@@ -158,9 +286,10 @@
                 dateFormat: is24Hour ? "H:i" : "h:i K",
                 time_24hr: is24Hour,
                 minuteIncrement: 15,
-                defaultHour: 12,
                 disableMobile: false, // Enable native pickers on mobile
-                allowInput: true
+                allowInput: true,
+                static: false,
+                animate: true
             };
 
             // Initialize start time picker
