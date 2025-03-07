@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: Bulk Date Update
- * Version: 1.4.8
+ * Version: 1.5.0
  * Description: Change the Post Update date for all posts in one click. This will help your blog in search engines and your blog will look alive. Do this every week or month.
  * Author: wplove.co
  * Author URI: https://tomrobak.com
@@ -29,7 +29,11 @@
 */
 
 // Define plugin version constant
-define('BULK_DATE_UPDATE_VERSION', '1.4.8');
+define('BULK_DATE_UPDATE_VERSION', '1.5.0');
+
+// Define history constants
+define('BULK_DATE_HISTORY_TABLE', 'bulk_date_update_history');
+define('BULK_DATE_HISTORY_DEFAULT_RETENTION', 30); // 30 days default retention
 
 /**
  * Add plugin menu item to WordPress admin
@@ -65,19 +69,255 @@ function bulk_post_update_date_load_textdomain(): void {
 add_action('plugins_loaded', 'bulk_post_update_date_load_textdomain');
 
 /**
- * Register Ajax handlers for tab toggling functionality
+ * Register AJAX handlers
  * 
  * @since 1.1
+ * @since 1.5.0 Added history infinite scroll handler
  * @return void
  */
 function bulk_post_update_date_ajax_handlers(): void {
     add_action('wp_ajax_bulk_date_update_toggle_tab', 'bulk_post_update_date_toggle_tab');
+    add_action('wp_ajax_bulk_date_update_load_more_history', 'bulk_date_update_load_more_history');
+    add_action('wp_ajax_bulk_date_update_remove_history_record', 'bulk_date_update_remove_history_record');
 }
-
 add_action('admin_init', 'bulk_post_update_date_ajax_handlers');
 
 /**
- * Ajax handler for enabling/disabling tabs
+ * AJAX handler for removing a history record after restore
+ * 
+ * @since 1.5.0
+ * @return void
+ */
+function bulk_date_update_remove_history_record(): void {
+    // Check nonce for security
+    check_ajax_referer('bulk_date_update_restore_record', 'nonce');
+    
+    // Check user capabilities
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => __('You do not have sufficient permissions to access this data.', 'bulk-post-update-date')]);
+        return;
+    }
+    
+    global $wpdb;
+    $table_name = $wpdb->prefix . BULK_DATE_HISTORY_TABLE;
+    
+    // Get record ID
+    $record_id = isset($_POST['record_id']) ? intval($_POST['record_id']) : 0;
+    
+    if (!$record_id) {
+        wp_send_json_error(['message' => __('Invalid record ID.', 'bulk-post-update-date')]);
+        return;
+    }
+    
+    // Delete the record
+    $result = $wpdb->delete(
+        $table_name,
+        ['id' => $record_id],
+        ['%d']
+    );
+    
+    if ($result === false) {
+        wp_send_json_error(['message' => __('Failed to delete history record.', 'bulk-post-update-date')]);
+        return;
+    }
+    
+    wp_send_json_success([
+        'message' => __('Record successfully deleted from history.', 'bulk-post-update-date'),
+        'record_id' => $record_id
+    ]);
+}
+
+/**
+ * AJAX handler for loading more history records
+ * 
+ * @since 1.5.0
+ * @return void
+ */
+function bulk_date_update_load_more_history(): void {
+    // Check nonce for security
+    check_ajax_referer('bulk_date_update_infinite_scroll', 'nonce');
+    
+    // Check user capabilities
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => __('You do not have sufficient permissions to access this data.', 'bulk-post-update-date')]);
+        return;
+    }
+    
+    global $wpdb;
+    $table_name = $wpdb->prefix . BULK_DATE_HISTORY_TABLE;
+    
+    // Get pagination parameters
+    $page = isset($_POST['page']) ? max(1, intval($_POST['page'])) : 1;
+    $per_page = 20;
+    $offset = ($page - 1) * $per_page;
+    
+    // Get filter parameters
+    $filter_post_type = isset($_POST['post_type']) ? sanitize_text_field($_POST['post_type']) : '';
+    $filter_date_field = isset($_POST['date_field']) ? sanitize_text_field($_POST['date_field']) : '';
+    $filter_date_from = isset($_POST['date_from']) ? sanitize_text_field($_POST['date_from']) : '';
+    $filter_date_to = isset($_POST['date_to']) ? sanitize_text_field($_POST['date_to']) : '';
+    $sort_by = isset($_POST['sort_by']) ? sanitize_text_field($_POST['sort_by']) : 'modified_at';
+    $sort_order = isset($_POST['sort_order']) ? sanitize_text_field($_POST['sort_order']) : 'DESC';
+    
+    // Validate sort parameters
+    $allowed_sort_fields = ['modified_at', 'previous_date', 'new_date'];
+    $allowed_sort_orders = ['ASC', 'DESC'];
+    
+    if (!in_array($sort_by, $allowed_sort_fields)) {
+        $sort_by = 'modified_at';
+    }
+    
+    if (!in_array($sort_order, $allowed_sort_orders)) {
+        $sort_order = 'DESC';
+    }
+    
+    // Build query
+    $query = "SELECT * FROM $table_name WHERE 1=1";
+    $query_args = [];
+    
+    // Apply filters
+    if (!empty($filter_post_type)) {
+        $query .= " AND post_type = %s";
+        $query_args[] = $filter_post_type;
+    }
+    
+    if (!empty($filter_date_field)) {
+        $query .= " AND date_field = %s";
+        $query_args[] = $filter_date_field;
+    }
+    
+    if (!empty($filter_date_from)) {
+        $query .= " AND modified_at >= %s";
+        $query_args[] = date('Y-m-d 00:00:00', strtotime($filter_date_from));
+    }
+    
+    if (!empty($filter_date_to)) {
+        $query .= " AND modified_at <= %s";
+        $query_args[] = date('Y-m-d 23:59:59', strtotime($filter_date_to));
+    }
+    
+    // Add order
+    $query .= " ORDER BY $sort_by $sort_order LIMIT %d OFFSET %d";
+    $query_args[] = $per_page;
+    $query_args[] = $offset;
+    
+    // Execute query
+    $history_records = $wpdb->get_results(
+        empty($query_args) ? $query : $wpdb->prepare($query, $query_args)
+    );
+    
+    $html = '';
+    
+    if (empty($history_records)) {
+        wp_send_json_success([
+            'html' => '',
+            'has_more' => false,
+            'message' => __('No more records to load.', 'bulk-post-update-date')
+        ]);
+        return;
+    }
+    
+    // Generate HTML for each record
+    foreach ($history_records as $record) {
+        // Get post type name instead of slug
+        $post_type_obj = get_post_type_object($record->post_type);
+        $post_type_name = $post_type_obj ? $post_type_obj->labels->singular_name : ucfirst($record->post_type);
+        $date_field_label = $record->date_field === 'post_date' 
+            ? esc_html__('Published Date', 'bulk-post-update-date') 
+            : esc_html__('Modified Date', 'bulk-post-update-date');
+        $record_date = get_date_from_gmt($record->modified_at, get_option('date_format') . ' ' . get_option('time_format'));
+        $previous_date = get_date_from_gmt($record->previous_date, get_option('date_format') . ' ' . get_option('time_format'));
+        $new_date = get_date_from_gmt($record->new_date, get_option('date_format') . ' ' . get_option('time_format'));
+        
+        $html .= '<div class="history-record-card" data-record-id="' . esc_attr($record->id) . '">';
+        $html .= '<div class="history-record-header">';
+        $html .= '<div class="history-record-title">';
+        $html .= '<a href="' . esc_url(get_edit_post_link($record->post_id)) . '" title="' . esc_attr__('Edit Post', 'bulk-post-update-date') . '">';
+        $html .= esc_html($record->post_title);
+        $html .= '</a>';
+        $html .= '<a href="' . esc_url(get_permalink($record->post_id)) . '" class="view-link" title="' . esc_attr__('View Post', 'bulk-post-update-date') . '" target="_blank">';
+        $html .= '<span class="dashicons dashicons-visibility"></span>';
+        $html .= '</a>';
+        $html .= '</div>';
+        $html .= '<div class="history-record-actions">';
+        $html .= '<a href="' . esc_url(wp_nonce_url(
+            add_query_arg('restore', $record->id),
+            'bulk_date_update_restore_' . $record->id
+        )) . '" class="btn btn-success btn-sm restore-button" data-record-id="' . esc_attr($record->id) . '" title="' . esc_attr__('Restore Previous Date', 'bulk-post-update-date') . '">';
+        $html .= esc_html__('Restore', 'bulk-post-update-date');
+        $html .= '</a>';
+        $html .= '</div>';
+        $html .= '</div>';
+        
+        $html .= '<div class="history-record-body">';
+        $html .= '<div class="history-record-field">';
+        $html .= '<div class="history-record-label">' . esc_html__('Date & Time', 'bulk-post-update-date') . '</div>';
+        $html .= '<div class="history-record-value">' . esc_html($record_date) . '</div>';
+        $html .= '</div>';
+        
+        $html .= '<div class="history-record-field">';
+        $html .= '<div class="history-record-label">' . esc_html__('Post Type', 'bulk-post-update-date') . '</div>';
+        $html .= '<div class="history-record-value">' . esc_html($post_type_name) . '</div>';
+        $html .= '</div>';
+        
+        $html .= '<div class="history-record-field">';
+        $html .= '<div class="history-record-label">' . esc_html__('Date Field', 'bulk-post-update-date') . '</div>';
+        $html .= '<div class="history-record-value">' . esc_html($date_field_label) . '</div>';
+        $html .= '</div>';
+        
+        $html .= '<div class="history-record-field">';
+        $html .= '<div class="history-record-label">' . esc_html__('Previous Date', 'bulk-post-update-date') . '</div>';
+        $html .= '<div class="history-record-value">' . esc_html($previous_date) . '</div>';
+        $html .= '</div>';
+        
+        $html .= '<div class="history-record-field">';
+        $html .= '<div class="history-record-label">' . esc_html__('New Date', 'bulk-post-update-date') . '</div>';
+        $html .= '<div class="history-record-value">' . esc_html($new_date) . '</div>';
+        $html .= '</div>';
+        
+        $html .= '</div>'; // end history-record-body
+        $html .= '</div>'; // end history-record-card
+    }
+    
+    // Get total count to determine if there are more records
+    $count_query = "SELECT COUNT(*) FROM $table_name WHERE 1=1";
+    $count_args = array_slice($query_args, 0, -2); // Remove LIMIT and OFFSET arguments
+    
+    if (!empty($filter_post_type)) {
+        $count_query .= " AND post_type = %s";
+    }
+    
+    if (!empty($filter_date_field)) {
+        $count_query .= " AND date_field = %s";
+    }
+    
+    if (!empty($filter_date_from)) {
+        $count_query .= " AND modified_at >= %s";
+    }
+    
+    if (!empty($filter_date_to)) {
+        $count_query .= " AND modified_at <= %s";
+    }
+    
+    $total_records = $wpdb->get_var(
+        empty($count_args) ? $count_query : $wpdb->prepare($count_query, $count_args)
+    );
+    
+    $total_pages = ceil($total_records / $per_page);
+    $has_more = $page < $total_pages;
+    
+    wp_send_json_success([
+        'html' => $html,
+        'has_more' => $has_more,
+        'total_pages' => $total_pages,
+        'current_page' => $page,
+        'next_page' => $page + 1,
+        'total_records' => $total_records
+    ]);
+}
+
+/**
+ * AJAX handler for toggling tabs
  * 
  * @since 1.1
  * @return void
@@ -169,10 +409,12 @@ function bulk_post_update_date_admin_enqueue_scripts(string $hook): void {
     wp_localize_script('bulkupdatedate-admin', 'bulkDateUpdate', [
         'ajaxUrl' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('bulk_date_update_toggle_tab'),
+        'restoreNonce' => wp_create_nonce('bulk_date_update_restore_record'),
         'currentTab' => isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'settings',
         'strings' => [
             'invalidTimeRange' => __('Start time cannot be later than end time.', 'bulk-post-update-date'),
             'updatingSettings' => __('Updating settings...', 'bulk-post-update-date'),
+            'settingsUpdated' => __('Settings updated successfully.', 'bulk-post-update-date'),
             'errorUpdatingSettings' => __('Error updating settings. Please try again.', 'bulk-post-update-date'),
             'today' => __('Today', 'bulk-post-update-date'),
             'yesterday' => __('Yesterday', 'bulk-post-update-date'),
@@ -180,7 +422,11 @@ function bulk_post_update_date_admin_enqueue_scripts(string $hook): void {
             'last30Days' => __('Last 30 Days', 'bulk-post-update-date'),
             'thisMonth' => __('This Month', 'bulk-post-update-date'),
             'lastMonth' => __('Last Month', 'bulk-post-update-date'),
-            'custom' => __('Custom', 'bulk-post-update-date')
+            'custom' => __('Custom', 'bulk-post-update-date'),
+            'invalidDate' => __('Invalid date provided', 'bulk-post-update-date'),
+            'dateRestored' => __('Date restored successfully and record removed from history.', 'bulk-post-update-date'),
+            'restoreError' => __('Error restoring date. Please try again.', 'bulk-post-update-date'),
+            'noRecordsFound' => __('No history records found.', 'bulk-post-update-date')
         ],
         'dates' => [
             'today' => date('Y-m-d'),
@@ -200,25 +446,72 @@ function bulk_post_update_date_admin_enqueue_scripts(string $hook): void {
 add_action('admin_enqueue_scripts', 'bulk_post_update_date_admin_enqueue_scripts');
 
 /**
- * Plugin activation hook to set default tab settings
+ * Plugin activation hook
+ * 
+ * Creates necessary database tables and sets default options
  *
- * @since 1.1
+ * @since 1.0
+ * @since 1.5.0 Added history table creation
  * @return void
  */
 function bulk_post_update_date_activate(): void {
-    // Set default tab settings if not already set
+    // Set default tab options if not already set
     if (!get_option('bulk_date_update_tabs')) {
-        $default_tabs = [
+        update_option('bulk_date_update_tabs', array(
             'posts' => true,
             'pages' => true,
-            'comments' => false
-        ];
-        
-        update_option('bulk_date_update_tabs', $default_tabs);
+            'comments' => true
+        ));
     }
+    
+    // Set default history options
+    if (!get_option('bulk_date_update_history_enabled')) {
+        update_option('bulk_date_update_history_enabled', true);
+    }
+    
+    if (!get_option('bulk_date_update_history_retention')) {
+        update_option('bulk_date_update_history_retention', BULK_DATE_HISTORY_DEFAULT_RETENTION);
+    }
+    
+    // Create history table
+    create_history_table();
 }
 
-register_activation_hook(__FILE__, 'bulk_post_update_date_activate');
+/**
+ * Creates the history table for storing date update history
+ *
+ * @since 1.5.0
+ * @return void
+ */
+function create_history_table(): void {
+    global $wpdb;
+    
+    $table_name = $wpdb->prefix . BULK_DATE_HISTORY_TABLE;
+    $charset_collate = $wpdb->get_charset_collate();
+    
+    // SQL to create the history table
+    $sql = "CREATE TABLE $table_name (
+        id bigint(20) NOT NULL AUTO_INCREMENT,
+        post_id bigint(20) NOT NULL,
+        post_title varchar(255) NOT NULL,
+        post_type varchar(20) NOT NULL,
+        previous_date datetime NOT NULL,
+        new_date datetime NOT NULL,
+        date_field varchar(20) NOT NULL COMMENT 'post_date or post_modified',
+        modified_by bigint(20) NOT NULL,
+        modified_at datetime NOT NULL,
+        PRIMARY KEY  (id),
+        KEY post_id (post_id),
+        KEY post_type (post_type),
+        KEY modified_at (modified_at)
+    ) $charset_collate;";
+    
+    // Include WordPress database upgrade functions
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    
+    // Create the table
+    dbDelta($sql);
+}
 
 /**
  * Plugin options page
@@ -241,7 +534,7 @@ function bulk_post_update_date_options(): void {
     $type = $tab;
 
     // Default to settings tab
-    if (!in_array($tab, ['settings', 'posts', 'pages', 'comments']) && !post_type_exists($tab)) {
+    if (!in_array($tab, ['settings', 'posts', 'pages', 'comments', 'history']) && !post_type_exists($tab)) {
         $tab = 'settings';
     }
     
@@ -252,9 +545,9 @@ function bulk_post_update_date_options(): void {
 
         try {
             if ($tab === 'comments') {
-                include_once 'inc.php';
-                $settings_saved = handleComments();
-            } else if ($tab !== 'settings') {
+          include_once 'inc.php';
+          $settings_saved = handleComments();
+            } else if ($tab !== 'settings' && $tab !== 'history') {
                 // Process post types (posts, pages, custom post types)
                 $settings_saved = processPostTypeUpdate($type);
             }
@@ -270,8 +563,29 @@ function bulk_post_update_date_options(): void {
         }
     }
     
-    // Display the settings form
-    include_once 'templates/settings-page.php';
+    // Include the appropriate template based on the tab
+    if ($tab === 'history') {
+        // Get post type object for display if applicable (for consistent template)
+        $post_type_obj = null;
+        
+        // Flag for the settings template to know we're on the history tab
+        $is_history_tab = true;
+        
+        // Display the settings form with history content
+        include_once 'templates/settings-page.php';
+    } else {
+        // Get post type object for display if applicable
+        $post_type_obj = null;
+        if ($tab !== 'settings' && $tab !== 'comments') {
+            $post_type_obj = get_post_type_object($tab);
+        }
+        
+        // Flag for the settings template - we're not on history tab
+        $is_history_tab = false;
+        
+        // Display the settings form for other tabs
+        include_once 'templates/settings-page.php';
+    }
 }
 
 /**
@@ -284,11 +598,15 @@ function bulk_post_update_date_options(): void {
 function processPostTypeUpdate(string $type): int {
     global $wpdb;
     
+    // Get post type object for nice name display
+    $post_type_obj = get_post_type_object($type);
+    $post_type_name = $post_type_obj ? $post_type_obj->labels->name : ucfirst($type);
+    
     // Get field to update (published date, modified date, or both)
     $field = isset($_POST['field']) ? sanitize_text_field($_POST['field']) : 'modified';
     if ($field !== 'date_both') {
-        $field = $field == 'published' ? 'post_date' : 'post_modified';
-    }
+                $field = $field == 'published' ? 'post_date' : 'post_modified';
+            }
 
     $ids = [];
 
@@ -296,8 +614,8 @@ function processPostTypeUpdate(string $type): int {
     if ($type == 'posts') {
         $params = [
             'numberposts' => -1,
-            'post_status' => 'publish',
-            'fields'      => 'ids'
+                    'post_status' => 'publish',
+                    'fields'      => 'ids'
         ];
 
         // Add category filter if specified
@@ -316,7 +634,7 @@ function processPostTypeUpdate(string $type): int {
     else if ($type == 'pages') {
         if (isset($_POST['pages']) && is_array($_POST['pages'])) {
             $ids = array_map('intval', $_POST['pages']);
-        } else {
+                } else {
             $pages = get_pages([
                 'sort_column' => 'post_title',
                 'post_status' => 'publish'
@@ -328,8 +646,8 @@ function processPostTypeUpdate(string $type): int {
     else {
         $params = [
             'numberposts' => -1,
-            'post_status' => 'publish',
-            'fields'      => 'ids',
+                    'post_status' => 'publish',
+                    'fields'      => 'ids',
             'post_type'   => sanitize_text_field($type)
         ];
 
@@ -337,10 +655,10 @@ function processPostTypeUpdate(string $type): int {
         if (isset($_POST['tax']) && is_array($_POST['tax'])) {
             foreach ($_POST['tax'] as $tax => $terms) {
                 if (!is_array($terms)) continue;
-                
+
                 $params['tax_query'][] = [
                     'taxonomy' => sanitize_key($tax),
-                    'field'    => 'term_id',
+                            'field'    => 'term_id',
                     'terms'    => array_map('intval', $terms)
                 ];
             }
@@ -426,6 +744,13 @@ function processPostTypeUpdate(string $type): int {
             $time = date("Y-m-d H:i:s", $time_timestamp);
             $time_gmt = get_gmt_from_date($time);
             
+            // Get current dates for history logging
+            $post = get_post($id);
+            $post_title = $post->post_title;
+            $post_type = $post->post_type;
+            $previous_date_published = $post->post_date;
+            $previous_date_modified = $post->post_modified;
+            
             if ($field === 'date_both') {
                 $wpdb->update(
                     $wpdb->posts,
@@ -439,6 +764,10 @@ function processPostTypeUpdate(string $type): int {
                     ['%s', '%s', '%s', '%s'],
                     ['%d']
                 );
+                
+                // Log history for both date fields
+                bulk_date_update_log_history($id, $post_title, $post_type, $previous_date_published, $time, 'post_date');
+                bulk_date_update_log_history($id, $post_title, $post_type, $previous_date_modified, $time, 'post_modified');
             } else {
                 $gmt_field = "{$field}_gmt";
                 $data = [];
@@ -452,6 +781,10 @@ function processPostTypeUpdate(string $type): int {
                     ['%s', '%s'],
                     ['%d']
                 );
+                
+                // Log history for the updated field
+                $previous_date = ($field === 'post_date') ? $previous_date_published : $previous_date_modified;
+                bulk_date_update_log_history($id, $post_title, $post_type, $previous_date, $time, $field);
             }
             
             $processed++;
@@ -467,4 +800,120 @@ function processPostTypeUpdate(string $type): int {
     }
     
     return $processed;
+}
+
+register_activation_hook(__FILE__, 'bulk_post_update_date_activate');
+
+/**
+ * Register settings
+ * 
+ * @since 1.5.0
+ * @return void
+ */
+function bulk_date_update_register_settings(): void {
+    register_setting(
+        'bulk_date_update_history_settings',
+        'bulk_date_update_history_enabled',
+        [
+            'type' => 'boolean',
+            'default' => true,
+            'sanitize_callback' => function($value) {
+                return (bool) $value;
+            }
+        ]
+    );
+    
+    register_setting(
+        'bulk_date_update_history_settings',
+        'bulk_date_update_history_retention',
+        [
+            'type' => 'integer',
+            'default' => BULK_DATE_HISTORY_DEFAULT_RETENTION,
+            'sanitize_callback' => function($value) {
+                $value = (int) $value;
+                // Make sure the value is one of our allowed options
+                if (!in_array($value, [7, 14, 30, 60])) {
+                    return BULK_DATE_HISTORY_DEFAULT_RETENTION;
+                }
+                return $value;
+            }
+        ]
+    );
+}
+add_action('admin_init', 'bulk_date_update_register_settings');
+
+/**
+ * Log post date update to history
+ *
+ * @since 1.5.0
+ * @param int $post_id The post ID
+ * @param string $post_title The post title
+ * @param string $post_type The post type
+ * @param string $previous_date The previous date value
+ * @param string $new_date The new date value
+ * @param string $date_field Which date field was updated (post_date or post_modified)
+ * @return bool|int False on failure, record ID on success
+ */
+function bulk_date_update_log_history(int $post_id, string $post_title, string $post_type, string $previous_date, string $new_date, string $date_field): bool|int {
+    // Check if history is enabled
+    if (!get_option('bulk_date_update_history_enabled', true)) {
+        return false;
+    }
+    
+    global $wpdb;
+    $table_name = $wpdb->prefix . BULK_DATE_HISTORY_TABLE;
+    
+    // Current user ID
+    $user_id = get_current_user_id();
+    
+    // Insert history record
+    $result = $wpdb->insert(
+        $table_name,
+        array(
+            'post_id' => $post_id,
+            'post_title' => $post_title,
+            'post_type' => $post_type,
+            'previous_date' => $previous_date,
+            'new_date' => $new_date,
+            'date_field' => $date_field,
+            'modified_by' => $user_id,
+            'modified_at' => current_time('mysql', true)
+        ),
+        array('%d', '%s', '%s', '%s', '%s', '%s', '%d', '%s')
+    );
+    
+    if ($result === false) {
+        return false;
+    }
+    
+    // Clean up old records
+    bulk_date_update_clean_history();
+    
+    return $wpdb->insert_id;
+}
+
+/**
+ * Clean up old history records based on retention setting
+ *
+ * @since 1.5.0
+ * @return int Number of records deleted
+ */
+function bulk_date_update_clean_history(): int {
+    global $wpdb;
+    $table_name = $wpdb->prefix . BULK_DATE_HISTORY_TABLE;
+    
+    // Get retention period in days
+    $retention_days = (int) get_option('bulk_date_update_history_retention', BULK_DATE_HISTORY_DEFAULT_RETENTION);
+    
+    // Delete records older than retention period
+    $date_threshold = date('Y-m-d H:i:s', strtotime("-{$retention_days} days"));
+    
+    $deleted = $wpdb->query(
+        $wpdb->prepare(
+            "DELETE FROM $table_name WHERE modified_at < %s",
+            $date_threshold
+        )
+    );
+    
+    return (int) $deleted;
 }

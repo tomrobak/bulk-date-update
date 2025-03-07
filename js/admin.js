@@ -4,7 +4,7 @@
  * Handles all the admin interactions including modern date/time pickers
  * and performance optimizations.
  * 
- * @since 1.4.8
+ * @since 1.5.0
  */
 
 (function($) {
@@ -23,6 +23,122 @@
             this.setupDateRangePresets();
             this.setupTabs();
             this.setupFormValidation();
+            this.setupInfiniteScroll();
+        },
+
+        /**
+         * Setup infinite scroll for history tab
+         * 
+         * @since 1.5.0
+         */
+        setupInfiniteScroll: function() {
+            if ($('#history-records-container').length === 0) {
+                return; // Not on history page
+            }
+            
+            const self = this;
+            let isLoading = false;
+            let hasMore = true;
+            
+            // Get pagination data
+            const paginationData = $('#pagination-data');
+            if (paginationData.length === 0) {
+                return;
+            }
+            
+            let currentPage = parseInt(paginationData.data('current-page'), 10) || 1;
+            const totalPages = parseInt(paginationData.data('total-pages'), 10) || 1;
+            const nonce = paginationData.data('nonce') || '';
+            
+            // No more pages to load
+            if (currentPage >= totalPages) {
+                hasMore = false;
+                $('#no-more-records').show();
+                return;
+            }
+            
+            // Set up restore buttons to work with AJAX
+            self.setupRestoreButtons();
+            
+            // Load more records when scrolling near the bottom
+            $(window).on('scroll', function() {
+                if (isLoading || !hasMore) {
+                    return;
+                }
+                
+                // Check if we're near the bottom of the page
+                if ($(window).scrollTop() + $(window).height() > $(document).height() - 200) {
+                    self.loadMoreHistory(currentPage + 1);
+                }
+            });
+        },
+        
+        /**
+         * Load more history records via AJAX
+         * 
+         * @since 1.5.0
+         * @param {number} page - The page number to load
+         */
+        loadMoreHistory: function(page) {
+            const self = this;
+            const paginationData = $('#pagination-data');
+            const nonce = paginationData.data('nonce') || '';
+            let isLoading = true;
+            
+            // Show loading indicator
+            $('#history-loading').show();
+            
+            // Get filter values from pagination data
+            const filterPostType = paginationData.data('post-type') || '';
+            const filterDateField = paginationData.data('date-field') || '';
+            const filterDateFrom = paginationData.data('date-from') || '';
+            const filterDateTo = paginationData.data('date-to') || '';
+            const sortBy = paginationData.data('sort-by') || 'modified_at';
+            const sortOrder = paginationData.data('sort-order') || 'DESC';
+            
+            $.ajax({
+                url: bulkDateUpdate.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'bulk_date_update_load_more_history',
+                    nonce: nonce,
+                    page: page,
+                    post_type: filterPostType,
+                    date_field: filterDateField,
+                    date_from: filterDateFrom,
+                    date_to: filterDateTo,
+                    sort_by: sortBy,
+                    sort_order: sortOrder
+                },
+                success: function(response) {
+                    // Hide loading indicator
+                    $('#history-loading').hide();
+                    isLoading = false;
+                    
+                    if (response.success) {
+                        // If no more records
+                        if (!response.data.has_more) {
+                            $('#no-more-records').show();
+                            hasMore = false;
+                        }
+                        
+                        // If there's HTML content, append it
+                        if (response.data.html) {
+                            $('#history-records-container').append(response.data.html);
+                            // Update current page
+                            paginationData.attr('data-current-page', response.data.current_page);
+                            currentPage = response.data.current_page;
+                        }
+                    } else {
+                        console.error('Error loading history:', response);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error loading history:', status, error, xhr.responseText);
+                    $('#history-loading').hide();
+                    isLoading = false;
+                }
+            });
         },
 
         /**
@@ -404,10 +520,10 @@
             });
             
             // MAJOR FIX: Ensure the tab toggle checkboxes have their change event properly bound
-            console.log('Setting up tab toggles. Found ' + $('.bulkud-tab-toggle').length + ' toggle checkboxes.');
+            console.log('Setting up tab toggles. Found ' + $('.tab-toggle').length + ' toggle checkboxes.');
             
             // Handle checkbox changes for tab toggling via AJAX
-            $(document).on('change', '.bulkud-tab-toggle', function() {
+            $(document).on('change', '.tab-toggle', function() {
                 const checkbox = $(this);
                 const tabId = checkbox.data('tab');
                 const isChecked = checkbox.is(':checked');
@@ -539,6 +655,63 @@
                     $notice.fadeOut();
                 }, 3000);
             }
+        },
+
+        /**
+         * Set up history restore buttons to work with AJAX
+         */
+        setupRestoreButtons: function() {
+            $(document).on('click', '.restore-button', function(e) {
+                e.preventDefault();
+                
+                const $button = $(this);
+                const recordId = $button.data('record-id');
+                const restoreUrl = $button.attr('href');
+                
+                if (!recordId) {
+                    return; // Missing data
+                }
+                
+                // Disable the button while processing
+                $button.addClass('disabled').prop('disabled', true);
+                
+                // Make the restore call via AJAX
+                $.ajax({
+                    url: restoreUrl,
+                    type: 'GET',
+                    success: function(response) {
+                        // If successful, remove the card from the display
+                        $button.closest('.history-record-card').fadeOut(300, function() {
+                            $(this).remove();
+                            
+                            // Show empty state if no more records
+                            if ($('.history-record-card').length === 0) {
+                                $('#history-records-container').html(
+                                    '<div class="empty-state"><p class="text-center">' + 
+                                    bulkDateUpdate.strings.noRecordsFound + 
+                                    '</p></div>'
+                                );
+                            }
+                        });
+                        
+                        // Show success message
+                        BulkDateAdmin.showNotice(
+                            bulkDateUpdate.strings.dateRestored, 
+                            'success'
+                        );
+                    },
+                    error: function() {
+                        // Re-enable the button
+                        $button.removeClass('disabled').prop('disabled', false);
+                        
+                        // Show error message
+                        BulkDateAdmin.showNotice(
+                            bulkDateUpdate.strings.restoreError, 
+                            'error'
+                        );
+                    }
+                });
+            });
         }
     };
 

@@ -24,6 +24,9 @@ Search engines like Google prioritize fresh content in their rankings. When your
 - Bulk update **Comments** dates for added realism
 - **Random distribution** of dates for natural appearance
 - **Modern date and time pickers** with intuitive presets
+- **Complete history tracking** of all date updates
+- **Restore previous dates** with a single click
+- **Customizable history retention** (7, 14, 30, or 60 days)
 - Completely redesigned UI for better user experience
 - One-click presets for common time periods (Today, Last Week, Last Month)
 - Option to update published date, modified date, or both
@@ -85,7 +88,38 @@ Yes, the plugin works on multisite installations, but must be activated on each 
 
 Yes, the plugin updates WordPress core date fields that are independent of page builders.
 
+### Can I track the history of date changes?
+
+Yes! Version 1.5.0 introduces comprehensive history tracking. You can see all date changes, including the previous and new dates, and even restore previous dates with a single click if needed.
+
 ## Changelog
+
+### 1.5.0
+**NEW:**
+- Added complete history tracking for all date updates
+- Added new History tab to view and manage all date changes
+- Added customizable history retention settings (7, 14, 30, or 60 days)
+- Added Bootstrap-styled buttons and form elements for better visual consistency
+- Added modern card-based history interface for enhanced mobile experience
+- Added AJAX-based record removal after successful date restore
+- Added infinite scroll pagination for smoother browsing of large history sets
+- Added detailed update logging with post titles and links
+- Added sorting options for history records by previous date, new date, or update time
+
+**IMPROVED:**
+- Improved history filters with full-width flex layout and 24px spacing
+- Improved post title display with proper word wrapping (no hyphenation)
+- Improved responsive design with card-based layout for all screen sizes
+- Enhanced post type display to show proper names instead of slugs
+- Enhanced history interface with modern card-based design
+- Optimized database queries for maximum performance
+- Implemented card-based UI to eliminate horizontal scrolling on mobile
+- Enhanced filtering with customizable sort order and direction
+
+**FIXED:**
+- Fixed navigation issues to maintain tab visibility across all views
+- Fixed column overlap issues in history table for long post titles
+- Fixed tablet and mobile display issues with optimized layout
 
 ### 1.4.8
 - Fixed field spacing in date and time pickers for optimal layout

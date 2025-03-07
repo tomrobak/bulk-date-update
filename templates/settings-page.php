@@ -31,9 +31,15 @@ $post_types = get_post_types($post_type_args, 'objects', 'and');
     
     <?php 
     // Show success message
-    if ($settings_saved > 0) : ?>
+    if ($settings_saved > 0) : 
+        // Get post type name for display
+        $post_type_name = ucfirst($tab);
+        if (isset($post_type_obj) && $post_type_obj) {
+            $post_type_name = $post_type_obj->labels->name;
+        }
+    ?>
         <div id="message" class="updated fade">
-            <p><strong><?php echo sprintf(__('%d %s dates successfully updated.', 'bulk-post-update-date'), $settings_saved, ucfirst($tab)); ?></strong></p>
+            <p><strong><?php echo sprintf(__('%d %s dates successfully updated.', 'bulk-post-update-date'), $settings_saved, $post_type_name); ?></strong></p>
         </div>
     <?php endif; ?>
     
@@ -50,66 +56,62 @@ $post_types = get_post_types($post_type_args, 'objects', 'and');
         </a>
     </div>
 
-    <h2 class="nav-tab-wrapper" id="bulk-date-tabs">
-        <a href="?page=bulk-post-update-date&tab=settings" class="nav-tab <?php echo $tab == 'settings' ? 'nav-tab-active' : ''; ?>" data-tab="settings">
-            <span class="dashicons dashicons-admin-settings" style="padding-top: 2px;"></span> <?php _e('Settings', 'bulk-post-update-date'); ?>
-        </a>
-        <?php if(isset($enabled_tabs['posts']) && $enabled_tabs['posts']): ?>
-        <a href="?page=bulk-post-update-date&tab=posts" class="nav-tab <?php echo $tab == 'posts' ? 'nav-tab-active' : ''; ?>" data-tab="posts">
-            <span class="dashicons dashicons-admin-post" style="padding-top: 2px;"></span> <?php _e('Posts', 'bulk-post-update-date'); ?>
-        </a>
-        <?php endif; ?>
-        
-        <?php if(isset($enabled_tabs['pages']) && $enabled_tabs['pages']): ?>
-        <a href="?page=bulk-post-update-date&tab=pages" class="nav-tab <?php echo $tab == 'pages' ? 'nav-tab-active' : ''; ?>" data-tab="pages">
-            <span class="dashicons dashicons-admin-page" style="padding-top: 2px;"></span> <?php _e('Pages', 'bulk-post-update-date'); ?>
-        </a>
-        <?php endif; ?>
+    <?php
     
-        <?php
-        // Get all public custom post types
-        if ($post_types) {
-            foreach ($post_types as $post_type) {
-                // Skip if not enabled
-                if(!isset($enabled_tabs[$post_type->name]) || !$enabled_tabs[$post_type->name]) {
-                    continue;
-                }
-                
-                $menu_icon = '';
-                
-                if (isset($post_type->menu_icon) && !empty($post_type->menu_icon)) {
-                    if (strpos($post_type->menu_icon, 'dashicon') !== false) { 
-                        $menu_icon = sprintf(
-                            '<span class="dashicons %s" style="padding-top: 2px;"></span>', 
-                            esc_attr($post_type->menu_icon)
-                        );
-                    } else {
-                        $menu_icon = sprintf(
-                            '<img src="%s" style="vertical-align: middle;margin-right: 3px;margin-top: -2px;width: 16px;height: 16px;">', 
-                            esc_url($post_type->menu_icon)
-                        );
-                    }
-                } else {
-                    $menu_icon = '<span class="dashicons dashicons-admin-generic" style="padding-top: 2px;"></span>';
-                }
-                
-                printf(
-                    '<a href="?page=bulk-post-update-date&tab=%s" class="nav-tab %s" data-tab="%s">%s %s</a>',
-                    esc_attr($post_type->name),
-                    $type == $post_type->name ? 'nav-tab-active' : '',
-                    esc_attr($post_type->name),
-                    $menu_icon,
-                    esc_html($post_type->label)
-                );
-            }
+    // Available tabs
+    $available_tabs = array(
+        'posts' => __('Posts', 'bulk-post-update-date'),
+        'pages' => __('Pages', 'bulk-post-update-date'),
+        'comments' => __('Comments', 'bulk-post-update-date')
+    );
+    
+    // Add custom post types to tabs
+    if (count($post_types) > 0) {
+        foreach ($post_types as $post_type) {
+            $available_tabs[$post_type->name] = $post_type->labels->name;
         }
+    }
+    
+    // Add history tab (always last)
+    $available_tabs['history'] = __('History', 'bulk-post-update-date');
+    
+    // Add settings tab (always first)
+    $available_tabs = array('settings' => __('Settings', 'bulk-post-update-date')) + $available_tabs;
+    
+    // Tab icons
+    $tab_icons = array(
+        'settings' => 'dashicons-admin-settings',
+        'posts' => 'dashicons-admin-post',
+        'pages' => 'dashicons-admin-page',
+        'comments' => 'dashicons-admin-comments',
+        'history' => 'dashicons-backup'
+    );
+    
+    // Get history settings
+    $history_enabled = get_option('bulk_date_update_history_enabled', true);
+    $history_retention = get_option('bulk_date_update_history_retention', BULK_DATE_HISTORY_DEFAULT_RETENTION);
+    
+    ?>
+
+    <h2 class="nav-tab-wrapper" id="bulk-date-tabs">
+        <?php foreach ($available_tabs as $tab_key => $tab_name): 
+            // Skip tabs that are not enabled, except settings and history
+            if (!in_array($tab_key, array('settings', 'history')) && (!isset($enabled_tabs[$tab_key]) || !$enabled_tabs[$tab_key])) {
+                continue;
+            }
+            
+            // Get icon
+            $icon = isset($tab_icons[$tab_key]) ? $tab_icons[$tab_key] : 'dashicons-admin-generic';
+            
+            // For custom post types, try to get their icon
+            if (!isset($tab_icons[$tab_key]) && isset($post_types[$tab_key]) && isset($post_types[$tab_key]->menu_icon)) {
+                $icon = $post_types[$tab_key]->menu_icon;
+            }
         ?>
-        
-        <?php if(isset($enabled_tabs['comments']) && $enabled_tabs['comments']): ?>
-        <a href="?page=bulk-post-update-date&tab=comments" class="nav-tab <?php echo $tab == 'comments' ? 'nav-tab-active' : ''; ?>" data-tab="comments">
-            <span class="dashicons dashicons-admin-comments" style="padding-top: 2px;"></span> <?php _e('Post Comments', 'bulk-post-update-date'); ?>
+        <a href="?page=bulk-post-update-date&tab=<?php echo esc_attr($tab_key); ?>" class="nav-tab <?php echo $tab == $tab_key ? 'nav-tab-active' : ''; ?>" data-tab="<?php echo esc_attr($tab_key); ?>">
+            <span class="dashicons <?php echo esc_attr($icon); ?>" style="padding-top: 2px;"></span> <?php echo esc_html($tab_name); ?>
         </a>
-        <?php endif; ?>
+        <?php endforeach; ?>
     </h2>
 
     <div class="settings-container <?php echo $tab == 'settings' ? '' : 'hidden'; ?>" id="settings-tab-content">
@@ -123,45 +125,113 @@ $post_types = get_post_types($post_type_args, 'objects', 'and');
             <?php wp_nonce_field('bulk_date_update_toggle_tab', 'tab_toggle_nonce'); ?>
         </div>
         
-        <table class="form-table">
-            <tr>
-                <th scope="row"><?php _e('Built-in Content Types', 'bulk-post-update-date'); ?></th>
-                <td>
-                    <label>
-                        <input type="checkbox" name="tab_posts" id="tab_posts" value="1" <?php checked(isset($enabled_tabs['posts']) && $enabled_tabs['posts']); ?> class="bulkud-tab-toggle" data-tab="posts">
-                        <?php _e('Posts', 'bulk-post-update-date'); ?>
-                    </label><br>
-                    <label>
-                        <input type="checkbox" name="tab_pages" id="tab_pages" value="1" <?php checked(isset($enabled_tabs['pages']) && $enabled_tabs['pages']); ?> class="bulkud-tab-toggle" data-tab="pages">
-                        <?php _e('Pages', 'bulk-post-update-date'); ?>
-                    </label><br>
-                    <label>
-                        <input type="checkbox" name="tab_comments" id="tab_comments" value="1" <?php checked(isset($enabled_tabs['comments']) && $enabled_tabs['comments']); ?> class="bulkud-tab-toggle" data-tab="comments">
-                        <?php _e('Comments', 'bulk-post-update-date'); ?>
-                    </label>
-                </td>
-            </tr>
-            <?php if (!empty($post_types)): ?>
-            <tr>
-                <th scope="row"><?php _e('Custom Post Types', 'bulk-post-update-date'); ?></th>
-                <td>
-                    <?php foreach ($post_types as $post_type): ?>
-                    <label>
-                        <input type="checkbox" name="tab_<?php echo esc_attr($post_type->name); ?>" 
-                               id="tab_<?php echo esc_attr($post_type->name); ?>" 
-                               value="1" 
-                               <?php checked(isset($enabled_tabs[$post_type->name]) && $enabled_tabs[$post_type->name]); ?>
-                               class="bulkud-tab-toggle" data-tab="<?php echo esc_attr($post_type->name); ?>">
-                        <?php echo esc_html($post_type->label); ?>
-                    </label><br>
-                    <?php endforeach; ?>
-                </td>
-            </tr>
-            <?php endif; ?>
-        </table>
+        <form method="post" id="tab-settings-form">
+            <table class="form-table" role="presentation">
+                <tbody>
+                <?php foreach ($available_tabs as $tab_key => $tab_name): 
+                    // Skip settings tab itself and history tab (they can't be disabled)
+                    if (in_array($tab_key, ['settings', 'history'])) {
+                        continue;
+                    }
+                    
+                    // Check if the tab is enabled
+                    $is_enabled = isset($enabled_tabs[$tab_key]) && $enabled_tabs[$tab_key];
+                ?>
+                    <tr>
+                        <th scope="row">
+                            <label for="tab_<?php echo esc_attr($tab_key); ?>">
+                                <?php echo esc_html($tab_name); ?>
+                            </label>
+                        </th>
+                        <td>
+                            <input type="checkbox" 
+                                id="tab_<?php echo esc_attr($tab_key); ?>" 
+                                name="tab_<?php echo esc_attr($tab_key); ?>" 
+                                class="tab-toggle" 
+                                value="1" 
+                                data-tab="<?php echo esc_attr($tab_key); ?>"
+                                <?php checked($is_enabled, true); ?>>
+                            <label for="tab_<?php echo esc_attr($tab_key); ?>">
+                                <?php printf(__('Show %s tab', 'bulk-post-update-date'), esc_html($tab_name)); ?>
+                            </label>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </form>
+        
+        <h3><?php _e('History Settings', 'bulk-post-update-date'); ?></h3>
+        <p><?php _e('Configure how the plugin tracks and stores update history.', 'bulk-post-update-date'); ?></p>
+        
+        <form method="post" action="options.php">
+            <?php settings_fields('bulk_date_update_history_settings'); ?>
+            <table class="form-table" role="presentation">
+                <tbody>
+                    <tr>
+                        <th scope="row">
+                            <label for="bulk_date_update_history_enabled">
+                                <?php _e('Enable History Tracking', 'bulk-post-update-date'); ?>
+                            </label>
+                        </th>
+                        <td>
+                            <input type="checkbox" 
+                                   id="bulk_date_update_history_enabled" 
+                                   name="bulk_date_update_history_enabled" 
+                                   value="1" 
+                                   <?php checked($history_enabled, true); ?>>
+                            <label for="bulk_date_update_history_enabled">
+                                <?php _e('Track date update history', 'bulk-post-update-date'); ?>
+                            </label>
+                            <p class="description">
+                                <?php _e('When enabled, the plugin will keep a record of all date changes.', 'bulk-post-update-date'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="bulk_date_update_history_retention">
+                                <?php _e('History Retention', 'bulk-post-update-date'); ?>
+                            </label>
+                        </th>
+                        <td>
+                            <select id="bulk_date_update_history_retention" name="bulk_date_update_history_retention">
+                                <option value="7" <?php selected($history_retention, 7); ?>>
+                                    <?php _e('7 days', 'bulk-post-update-date'); ?>
+                                </option>
+                                <option value="14" <?php selected($history_retention, 14); ?>>
+                                    <?php _e('14 days', 'bulk-post-update-date'); ?>
+                                </option>
+                                <option value="30" <?php selected($history_retention, 30); ?>>
+                                    <?php _e('30 days', 'bulk-post-update-date'); ?>
+                                </option>
+                                <option value="60" <?php selected($history_retention, 60); ?>>
+                                    <?php _e('60 days', 'bulk-post-update-date'); ?>
+                                </option>
+                            </select>
+                            <p class="description">
+                                <?php _e('How long to keep history records before automatically removing them.', 'bulk-post-update-date'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p class="submit">
+                <input type="submit" name="submit" id="submit" class="button button-primary" value="<?php esc_attr_e('Save History Settings', 'bulk-post-update-date'); ?>">
+            </p>
+        </form>
+        
+        <hr>
     </div>
 
     <div id="main-tab-content" class="<?php echo $tab == 'settings' ? 'hidden' : ''; ?>">
+        <?php if (isset($is_history_tab) && $is_history_tab === true): ?>
+            <?php 
+            // Include history tab content directly
+            include_once dirname(__FILE__) . '/history-tab-content.php'; 
+            ?>
+        <?php else: ?>
         <form method="post" action="" id="bulk-update-form">
             <table class="form-table">
                 <tr valign="top">
@@ -282,6 +352,7 @@ $post_types = get_post_types($post_type_args, 'objects', 'and');
                 <input class="button-primary" name="do" type="submit" value="<?php _e('Update Post Dates', 'bulk-post-update-date'); ?>" />
             </p>
         </form>
+        <?php endif; ?>
     </div>
 </div>
 

@@ -570,3 +570,101 @@
         justify-content: flex-start;
     }
 }
+
+/* Responsive styles for all tabs */
+@media (max-width: 1024px) {
+    .form-table th {
+        width: 150px;
+    }
+    
+    .distribute-dropdown {
+        max-width: 100%;
+    }
+    
+    .nav-tab {
+        padding: 5px 10px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 782px) {
+    /* Improve mobile experience */
+    .nav-tab-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    .nav-tab {
+        margin-bottom: 5px;
+        text-align: center;
+        flex: 0 0 auto;
+    }
+    
+    /* Better form layout on mobile */
+    .form-table th,
+    .form-table td {
+        display: block;
+        width: 100%;
+        padding: 10px 0;
+    }
+    
+    .form-table th {
+        padding-bottom: 0;
+    }
+    
+    /* Improve date/time controls */
+    .date-inputs,
+    .time-range-row {
+        flex-direction: column;
+    }
+    
+    .date-input-wrapper,
+    .time-input-wrapper {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 15px;
+    }
+    
+    .date-presets,
+    .time-presets {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    
+    .date-preset, 
+    .time-preset {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .coffee-box {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 576px) {
+    /* Extreme mobile optimization */
+    .wrap {
+        margin: 10px 0;
+    }
+    
+    .nav-tab-wrapper {
+        padding: 0;
+        border-bottom: none;
+    }
+    
+    .nav-tab {
+        margin: 0 0 5px 0;
+        border-radius: 3px;
+        width: 48%;
+        padding: 8px 5px;
+        font-size: 12px;
+    }
+    
+    /* More compact resource cards */
+    .resource-cards {
+        grid-template-columns: 1fr;
+    }
+}
